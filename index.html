@@ -2,17 +2,404 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <!-- Meta viewport para dispositivos móviles -->
+  <!-- Meta viewport para evitar zoom accidental -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>DreamTouch - Improvisación sobre un acorde</title>
+  <title>Improvisación sobre un Acorde</title>
   <!-- Shim para evitar error de require -->
   <script>
     window.require = function() {};
   </script>
-  <!-- Scripts para MIDI y Soundfont -->
+  <!-- Scripts MIDI y soundfont -->
   <script src="https://cdn.jsdelivr.net/npm/webmidiapishim"></script>
   <script src="https://cdn.jsdelivr.net/npm/webmidi@2"></script>
   <script src="https://cdn.jsdelivr.net/gh/gasman/jasmid@master/stream.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gasman/jasmid@master/midifile.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/soundfont-player@0.12.0/dist/soundfont-player.min.js"></script>
   <style>
+    html {
+      transform: scale(0.9);
+      transform-origin: top center;
+    }
+    body {
+      background-color: #FFFFFF;
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 10px;
+      transition: background-color 0.3s ease;
+    }
+    #container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 6px solid black;
+      padding: 20px;
+      background-color: #FFFFFF;
+      color: black;
+      width: 350px;
+      box-sizing: border-box;
+      z-index: 1;
+    }
+    h1 {
+      margin: 0 0 10px 0;
+      font-size: 2em;
+      text-align: center;
+    }
+    #info {
+      margin-bottom: 10px;
+      font-size: 0.9em;
+      text-align: center;
+    }
+    /* Contenedor que muestra las 6 filas de matices dinámicos */
+    #dynamicMarkingsContainer {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      margin-bottom: 10px;
+    }
+    /* Cada fila tiene un fondo por defecto (gray) y se resalta cuando se pulsa */
+    #dynamicMarkingsContainer > div {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid black;
+      font-size: 1em;
+      color: white;
+      background-color: gray;
+      transition: background-color 0.3s ease;
+      padding: 3px;
+      margin: 2px 0;
+      width: 100%;
+    }
+    /* Controles para el acorde */
+    #chordControls {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    #chordInput {
+      padding: 5px;
+      font-size: 1em;
+      width: 100px;
+      text-align: center;
+    }
+    #setChordBtn {
+      padding: 5px 10px;
+      font-size: 1em;
+      background-color: #90EE90;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    /* Controles generales (por ejemplo, el pedal) */
+    #buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+    #pedalBtn {
+      background-color: #90EE90;
+      color: black;
+      padding: 5px 10px;
+      font-size: 0.9em;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Improvisación sobre un Acorde</h1>
+    <div id="info">
+      Ingresa un acorde (ej. <em>Cm</em>, <em>Gmaj</em>, <em>E7</em>, <em>Adim</em>) y presiona el botón para establecerlo.<br>
+      Luego, toca las teclas del teclado físico para improvisar.
+    </div>
+    <!-- Controles para definir el acorde -->
+    <div id="chordControls">
+      <input type="text" id="chordInput" placeholder="Acorde">
+      <button id="setChordBtn">Set Acorde</button>
+    </div>
+    <!-- Contenedor visual para dinámica (6 filas: de Fortissimo a Pianissimo) -->
+    <div id="dynamicMarkingsContainer">
+      <div>Fortissimo</div>
+      <div>Forte</div>
+      <div>Mezzo-forte</div>
+      <div>Mezzo-piano</div>
+      <div>Piano</div>
+      <div>Pianissimo</div>
+    </div>
+    <div id="buttons">
+      <button id="pedalBtn">Pedal ON</button>
+    </div>
+  </div>
+
+  <script>
+    // VARIABLES GLOBALES:
+    var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    var pianoInstrument = null;
+    var pedalOn = true;
+    var currentActiveNote = null; // Para mantener monofonía
+    var currentChordData = null;  // Objeto con { root, intervals }
+    var chordScale = [];          // Array de notas MIDI resultante del acorde actual
+
+    // Mapeo de teclas a filas de dinámica (0 a 5). (0: Fortissimo, 5: Pianissimo)
+    const keyRowMap = {
+      // Fila 0: Teclas de función (F1-F12)
+      'F1': 0, 'F2': 0, 'F3': 0, 'F4': 0, 'F5': 0, 'F6': 0, 'F7': 0, 'F8': 0, 'F9': 0, 'F10': 0, 'F11': 0, 'F12': 0,
+      // Fila 1: Números y símbolos
+      'Backquote': 1, 'Digit1': 1, 'Digit2': 1, 'Digit3': 1, 'Digit4': 1,
+      'Digit5': 1, 'Digit6': 1, 'Digit7': 1, 'Digit8': 1, 'Digit9': 1, 'Digit0': 1, 'Minus': 1, 'Equal': 1,
+      // Fila 2: Q, W, E, R, T, Y, U, I, O, P
+      'KeyQ': 2, 'KeyW': 2, 'KeyE': 2, 'KeyR': 2, 'KeyT': 2, 'KeyY': 2, 'KeyU': 2, 'KeyI': 2, 'KeyO': 2, 'KeyP': 2,
+      'BracketLeft': 2, 'BracketRight': 2,
+      // Fila 3: A, S, D, F, G, H, J, K, L, ;, '
+      'KeyA': 3, 'KeyS': 3, 'KeyD': 3, 'KeyF': 3, 'KeyG': 3, 'KeyH': 3, 'KeyJ': 3, 'KeyK': 3, 'KeyL': 3, 'Semicolon': 3, 'Quote': 3,
+      // Fila 4: Z, X, C, V, B, N, M, , . /
+      'KeyZ': 4, 'KeyX': 4, 'KeyC': 4, 'KeyV': 4, 'KeyB': 4, 'KeyN': 4, 'KeyM': 4, 'Comma': 4, 'Period': 4, 'Slash': 4,
+      // Fila 5: Barra espaciadora (Pianissimo)
+      'Space': 5
+    };
+    const totalRows = 6; // 0 a 5
+
+    // Cargar el instrumento (piano acústico)
+    if (window.Soundfont && typeof window.Soundfont.instrument === 'function') {
+      Soundfont.instrument(audioContext, 'acoustic_grand_piano', { soundfont: 'MusyngKite' })
+        .then(function(piano) {
+          pianoInstrument = piano;
+          console.log("Instrumento Acoustic Grand Piano cargado.");
+        })
+        .catch(function(error) {
+          console.error("Error al cargar el instrumento:", error);
+        });
+    } else {
+      console.error("No se encontró el método instrument en Soundfont.");
+    }
+
+    // Función para convertir MIDI a nombre de nota (ej. 60 -> "C4")
+    function midiNoteToNoteName(midi) {
+      var octave = Math.floor(midi / 12) - 1;
+      var noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      return noteNames[midi % 12] + octave;
+    }
+
+    // Calcula ganancia (gain) en función de un valor relativo (0 = arriba: fuerte, 1 = abajo: suave)
+    function computeEffectiveGain(relativeY) {
+      var minGain = 0.55;
+      var maxGain = 1.5;
+      return minGain + (maxGain - minGain) * (1 - relativeY);
+    }
+
+    // Función para reproducir nota con pedal (nota con duración prolongada)
+    function playPianoNote(gain, midiNote) {
+      if (pianoInstrument) {
+        var noteName = midiNoteToNoteName(midiNote);
+        var source = pianoInstrument.play(noteName, audioContext.currentTime, { 
+          gain: gain, 
+          duration: 3.0, 
+          velocity: gain * 127 
+        });
+        var noteGain = audioContext.createGain();
+        noteGain.gain.setValueAtTime(gain, audioContext.currentTime);
+        source.disconnect();
+        source.connect(noteGain);
+        noteGain.gain.setValueAtTime(gain, audioContext.currentTime + 2);
+        noteGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
+        noteGain.connect(audioContext.destination); // Conecta a destino (vía filtros si se agregan)
+        console.log("Nota reproducida (PEDAL ON):", noteName, "gain:", gain);
+      } else {
+        console.warn("El instrumento aún no se ha cargado.");
+      }
+    }
+
+    // Función para reproducir nota sin pedal, permitiendo detenerla al soltar la tecla
+    function playNoteNonPedal(gain, midiNote) {
+      if (pianoInstrument) {
+        var noteName = midiNoteToNoteName(midiNote);
+        var source = pianoInstrument.play(noteName, audioContext.currentTime, {
+          gain: gain,
+          duration: 100,
+          velocity: gain * 127
+        });
+        var noteGain = audioContext.createGain();
+        noteGain.gain.setValueAtTime(gain, audioContext.currentTime);
+        source.disconnect();
+        source.connect(noteGain);
+        noteGain.connect(audioContext.destination);
+        console.log("Nota reproducida (SIN PEDAL):", noteName, "gain:", gain);
+        return {
+          source: source,
+          gainNode: noteGain,
+          stop: function() {
+            noteGain.gain.cancelScheduledValues(audioContext.currentTime);
+            noteGain.gain.setValueAtTime(noteGain.gain.value, audioContext.currentTime);
+            noteGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+            setTimeout(function(){
+              if (source.stop) { source.stop(); }
+            }, 250);
+          }
+        };
+      } else {
+        console.warn("El instrumento aún no se ha cargado.");
+      }
+    }
+
+    // Función para parsear un acorde dado en forma de cadena y determinar:
+    // - El root (MIDI) (usaremos el C4 = 60 para "C")
+    // - Los intervalos de la escala asociada según el tipo de acorde.
+    function parseChord(chordStr) {
+      chordStr = chordStr.trim();
+      // Captura la nota raíz (una letra seguida opcionalmente de 'b' o '#')
+      var regex = /^([A-G](?:b|#)?)(.*)$/;
+      var match = chordStr.match(regex);
+      if (!match) return null;
+      var root = match[1].toUpperCase();
+      var modifiers = match[2].toLowerCase();
+
+      // Mapear la letra a un offset semitonal partiendo de C
+      var noteOffsets = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
+      var rootOffset = noteOffsets[root[0]];
+      if (root.length > 1) {
+        if (root[1] === '#') {
+          rootOffset += 1;
+        } else if (root[1] === 'B' || root[1] === 'b') {
+          rootOffset -= 1;
+        }
+      }
+      // Establecemos el root en la octava 4: C4 = 60
+      var midiRoot = 60 + rootOffset;
+
+      var scaleIntervals;
+      if (modifiers.includes("dim")) {
+        // Para acordes disminuidos usamos una escala disminuida (octatónica)
+        scaleIntervals = [0,2,3,5,6,8,9,11];
+      } else if (modifiers.includes("maj")) {
+        // Acorde mayor: usamos la escala mayor (Jónico)
+        scaleIntervals = [0,2,4,5,7,9,11];
+      } else if (modifiers.includes("7")) {
+        // Acorde dominante: usamos la escala mixolidia
+        scaleIntervals = [0,2,4,5,7,9,10];
+      } else if (modifiers.includes("m")) {
+        // Acorde menor (sin "maj"): usamos la escala dórica (opción común en jazz)
+        scaleIntervals = [0,2,3,5,7,9,10];
+      } else {
+        // Por defecto asumimos acorde mayor
+        scaleIntervals = [0,2,4,5,7,9,11];
+      }
+
+      return { root: midiRoot, intervals: scaleIntervals };
+    }
+
+    // Actualiza el acorde actual y recalcula la escala.
+    function setChord(chordStr) {
+      var parsed = parseChord(chordStr);
+      if (!parsed) {
+        alert("Acorde no reconocido. Intenta por ejemplo: Cm, Gmaj, E7, Adim");
+        return;
+      }
+      currentChordData = parsed;
+      // Generar la escala: notas de la octava base y una octava superior para tener más opciones
+      var baseOctave = parsed.intervals.map(i => parsed.root + i);
+      var upperOctave = parsed.intervals.map(i => parsed.root + 12 + i);
+      chordScale = baseOctave.concat(upperOctave);
+      console.log("Acorde establecido:", chordStr, "-> escala:", chordScale);
+    }
+
+    // Asignar el acorde cuando se pulsa el botón "Set Acorde"
+    document.getElementById('setChordBtn').addEventListener('click', function() {
+      var chordStr = document.getElementById('chordInput').value;
+      setChord(chordStr);
+    });
+
+    // Si aún no se ha establecido ningún acorde, por defecto usaremos "C" (mayor)
+    if (!currentChordData) {
+      setChord("C");
+    }
+
+    // Manejo de eventos de keydown:
+    document.addEventListener('keydown', function(e) {
+      // Si la tecla está mapeada, prevenir la acción por defecto (por ejemplo, F1-F12)
+      if (e.code in keyRowMap) {
+        e.preventDefault();
+      }
+      if (e.repeat) return;
+      if (!(e.code in keyRowMap)) return;
+
+      // Calcular ganancia en función de la fila dinámica asignada
+      var rowIndex = keyRowMap[e.code]; // 0 (arriba) a 5 (abajo)
+      var relativeY = rowIndex / (totalRows - 1); // Valor de 0 a 1
+      var effectiveGain = computeEffectiveGain(relativeY);
+
+      // Actualizar visualmente el contenedor de dinámica
+      var dynamicContainer = document.getElementById('dynamicMarkingsContainer');
+      for (var i = 0; i < dynamicContainer.children.length; i++) {
+        dynamicContainer.children[i].style.backgroundColor = 'gray';
+      }
+      var randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+      if (dynamicContainer.children[rowIndex]) {
+        dynamicContainer.children[rowIndex].style.backgroundColor = randomColor;
+      }
+
+      // Elegir una nota de la escala del acorde actual de forma aleatoria
+      if (chordScale.length === 0) return;
+      var index = Math.floor(Math.random() * chordScale.length);
+      var midiNote = chordScale[index];
+
+      // Para monofonía: si ya hay una nota activa y el pedal está desactivado, detenerla
+      if (currentActiveNote && !pedalOn) {
+        currentActiveNote.stop();
+        currentActiveNote = null;
+      }
+      // Reproducir la nota
+      if (pedalOn) {
+        playPianoNote(effectiveGain, midiNote);
+      } else {
+        currentActiveNote = playNoteNonPedal(effectiveGain, midiNote);
+      }
+    });
+
+    // Manejo de keyup para detener la nota en caso de pedal apagado
+    document.addEventListener('keyup', function(e) {
+      if (currentActiveNote) {
+        currentActiveNote.stop();
+        currentActiveNote = null;
+      }
+      // Restaurar el color de la fila correspondiente a gris
+      var dynamicContainer = document.getElementById('dynamicMarkingsContainer');
+      var rowIndex = keyRowMap[e.code];
+      if (dynamicContainer.children[rowIndex]) {
+        dynamicContainer.children[rowIndex].style.backgroundColor = 'gray';
+      }
+    });
+
+    // Reanudar el AudioContext con la primera interacción (click)
+    document.addEventListener('click', function() {
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+          console.log("AudioContext reanudado");
+        });
+      }
+    });
+
+    // Botón para alternar el estado del pedal
+    document.getElementById('pedalBtn').addEventListener('click', function() {
+      pedalOn = !pedalOn;
+      this.textContent = pedalOn ? "Pedal ON" : "Pedal OFF";
+      this.style.backgroundColor = pedalOn ? "#90EE90" : "#ADD8E6";
+      console.log("Pedal:", pedalOn ? "ON" : "OFF");
+    });
+  </script>
+</body>
+</html>
