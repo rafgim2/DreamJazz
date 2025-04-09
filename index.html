@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <!-- Meta viewport para evitar zoom accidental -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Improvisación sobre un Acorde</title>
+  <title>Improvisación Melódica sobre un Acorde</title>
   <!-- Shim para evitar error de require -->
   <script>
     window.require = function() {};
   </script>
-  <!-- Scripts MIDI y soundfont -->
+  <!-- Scripts MIDI y Soundfont -->
   <script src="https://cdn.jsdelivr.net/npm/webmidiapishim"></script>
   <script src="https://cdn.jsdelivr.net/npm/webmidi@2"></script>
   <script src="https://cdn.jsdelivr.net/gh/gasman/jasmid@master/stream.js"></script>
@@ -55,7 +55,7 @@
       font-size: 0.9em;
       text-align: center;
     }
-    /* Contenedor que muestra las 6 filas de matices dinámicos */
+    /* Contenedor visual de la dinámica (6 filas: de Fortissimo a Pianissimo) */
     #dynamicMarkingsContainer {
       width: 100%;
       display: flex;
@@ -63,7 +63,6 @@
       user-select: none;
       margin-bottom: 10px;
     }
-    /* Cada fila tiene un fondo por defecto (gray) y se resalta cuando se pulsa */
     #dynamicMarkingsContainer > div {
       flex: 1;
       display: flex;
@@ -78,7 +77,7 @@
       margin: 2px 0;
       width: 100%;
     }
-    /* Controles para el acorde */
+    /* Controles para establecer el acorde */
     #chordControls {
       display: flex;
       flex-direction: row;
@@ -101,7 +100,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    /* Controles generales (por ejemplo, el pedal) */
+    /* Botones generales (por ejemplo, el pedal) */
     #buttons {
       display: flex;
       flex-direction: column;
@@ -122,17 +121,17 @@
 </head>
 <body>
   <div id="container">
-    <h1>Improvisación sobre un Acorde</h1>
+    <h1>Improvisación Melódica</h1>
     <div id="info">
-      Ingresa un acorde (ej. <em>Cm</em>, <em>Gmaj</em>, <em>E7</em>, <em>Adim</em>) y presiona el botón para establecerlo.<br>
-      Luego, toca las teclas del teclado físico para improvisar.
+      Ingresa un acorde (ej.: <em>Cm</em>, <em>Gmaj</em>, <em>E7</em>, <em>Adim</em>) y pulsa "Set Acorde".<br>
+      Luego toca las teclas del teclado físico para improvisar.
     </div>
     <!-- Controles para definir el acorde -->
     <div id="chordControls">
       <input type="text" id="chordInput" placeholder="Acorde">
       <button id="setChordBtn">Set Acorde</button>
     </div>
-    <!-- Contenedor visual para dinámica (6 filas: de Fortissimo a Pianissimo) -->
+    <!-- Contenedor para la representación de la dinámica -->
     <div id="dynamicMarkingsContainer">
       <div>Fortissimo</div>
       <div>Forte</div>
@@ -147,15 +146,16 @@
   </div>
 
   <script>
-    // VARIABLES GLOBALES:
+    // VARIABLES GLOBALES
     var audioContext = new (window.AudioContext || window.webkitAudioContext)();
     var pianoInstrument = null;
     var pedalOn = true;
     var currentActiveNote = null; // Para mantener la monofonía
-    var currentChordData = null;  // Objeto con { root, intervals } - se establecerá al introducir el acorde
+    var currentChordData = null;  // Objeto con { root, intervals, chordType, chordTones }
     var chordScale = [];          // Array de notas MIDI resultante del acorde actual
+    var lastMidiNote = null;      // Guarda la última nota reproducida (para favorecer continuidad)
 
-    // Mapeo de teclas a filas de dinámica (0 a 5). (0: Fortissimo, 5: Pianissimo)
+    // Mapeo de teclas a las filas de dinámica (0 a 5: 0 = Fortissimo, 5 = Pianissimo)
     const keyRowMap = {
       // Fila 0: Teclas de función (F1-F12)
       'F1': 0, 'F2': 0, 'F3': 0, 'F4': 0, 'F5': 0, 'F6': 0, 'F7': 0, 'F8': 0, 'F9': 0, 'F10': 0, 'F11': 0, 'F12': 0,
@@ -172,9 +172,9 @@
       // Fila 5: Barra espaciadora (Pianissimo)
       'Space': 5
     };
-    const totalRows = 6; // 0 a 5
+    const totalRows = 6; // Filas 0 a 5
 
-    // Cargar el instrumento (piano acústico)
+    // Cargar el instrumento de piano (Acoustic Grand Piano)
     if (window.Soundfont && typeof window.Soundfont.instrument === 'function') {
       Soundfont.instrument(audioContext, 'acoustic_grand_piano', { soundfont: 'MusyngKite' })
         .then(function(piano) {
@@ -188,21 +188,21 @@
       console.error("No se encontró el método instrument en Soundfont.");
     }
 
-    // Función para convertir un número MIDI a nombre de nota (ej. 60 -> "C4")
+    // Convierte un número MIDI a su nombre (ej. 60 -> "C4")
     function midiNoteToNoteName(midi) {
       var octave = Math.floor(midi / 12) - 1;
       var noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
       return noteNames[midi % 12] + octave;
     }
 
-    // Calcula la ganancia (gain) en función de un valor relativo (0 = arriba: fuerte, 1 = abajo: suave)
+    // Calcula la ganancia en función de la fila (0 = fuerte, 1 = suave)
     function computeEffectiveGain(relativeY) {
       var minGain = 0.55;
       var maxGain = 1.5;
       return minGain + (maxGain - minGain) * (1 - relativeY);
     }
 
-    // Función para reproducir nota con pedal (nota con duración prolongada)
+    // Función para reproducir nota con pedal (nota sostenida)
     function playPianoNote(gain, midiNote) {
       if (pianoInstrument) {
         var noteName = midiNoteToNoteName(midiNote);
@@ -224,7 +224,7 @@
       }
     }
 
-    // Función para reproducir nota sin pedal, permitiendo detenerla en keyup
+    // Función para reproducir nota sin pedal (monofónica, deteniendo la nota al soltar la tecla)
     function playNoteNonPedal(gain, midiNote) {
       if (pianoInstrument) {
         var noteName = midiNoteToNoteName(midiNote);
@@ -256,19 +256,18 @@
       }
     }
 
-    // Función para parsear un acorde dado en forma de cadena y determinar:
-    // - El root (MIDI) (usaremos C4 = 60 para "C")
-    // - Los intervalos de la escala asociados según el tipo de acorde.
+    // Función para parsear la cadena del acorde
+    // Devuelve un objeto con: { root, intervals, chordType, chordTones }
     function parseChord(chordStr) {
       chordStr = chordStr.trim();
-      // Captura la nota raíz (una letra seguida opcionalmente de 'b' o '#')
+      // Expresión regular para extraer la nota raíz y los modificadores (ej. "Cm", "Gmaj", "E7", "Adim")
       var regex = /^([A-G](?:b|#)?)(.*)$/;
       var match = chordStr.match(regex);
       if (!match) return null;
       var root = match[1].toUpperCase();
       var modifiers = match[2].toLowerCase();
 
-      // Mapear la letra a un offset semitonal partiendo de C
+      // Mapear la letra a un offset semitonal (partiendo de C)
       var noteOffsets = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
       var rootOffset = noteOffsets[root[0]];
       if (root.length > 1) {
@@ -278,31 +277,38 @@
           rootOffset -= 1;
         }
       }
-      // Definir el root en la octava 4: C4 = 60
+      // Definir el root en la octava 4 (C4 = 60)
       var midiRoot = 60 + rootOffset;
 
       var scaleIntervals;
+      var chordType;
+      var chordTones;
       if (modifiers.includes("dim")) {
-        // Para acordes disminuidos se usa una escala disminuida (octatónica)
+        chordType = "dim";
+        chordTones = [0, 3, 6];
         scaleIntervals = [0,2,3,5,6,8,9,11];
       } else if (modifiers.includes("maj")) {
-        // Para acordes mayores se usa la escala mayor (Jónica)
+        chordType = "maj";
+        chordTones = [0,4,7];
         scaleIntervals = [0,2,4,5,7,9,11];
       } else if (modifiers.includes("7")) {
-        // Para acordes dominantes se usa la escala mixolidia
+        chordType = "7";
+        chordTones = [0,4,7,10];
         scaleIntervals = [0,2,4,5,7,9,10];
       } else if (modifiers.includes("m")) {
-        // Para acordes menores se usa la escala dórica (opción común en jazz)
+        chordType = "m";
+        chordTones = [0,3,7];
         scaleIntervals = [0,2,3,5,7,9,10];
       } else {
-        // Por defecto, se asume acorde mayor
+        chordType = "maj";
+        chordTones = [0,4,7];
         scaleIntervals = [0,2,4,5,7,9,11];
       }
 
-      return { root: midiRoot, intervals: scaleIntervals };
+      return { root: midiRoot, intervals: scaleIntervals, chordType: chordType, chordTones: chordTones };
     }
 
-    // Actualiza el acorde actual y recalcula la escala
+    // Función para establecer el acorde actual y generar la escala (dos octavas)
     function setChord(chordStr) {
       var parsed = parseChord(chordStr);
       if (!parsed) {
@@ -310,11 +316,46 @@
         return;
       }
       currentChordData = parsed;
-      // Generar la escala: notas de la octava base y una octava superior para mayor variedad
+      // Generar la escala a partir de los intervalos: una octava base y una superior
       var baseOctave = parsed.intervals.map(i => parsed.root + i);
       var upperOctave = parsed.intervals.map(i => parsed.root + 12 + i);
       chordScale = baseOctave.concat(upperOctave);
+      // Reiniciamos la última nota para iniciar la improvisación de forma coherente
+      lastMidiNote = null;
       console.log("Acorde establecido:", chordStr, "-> escala:", chordScale);
+    }
+
+    // Función que elige la siguiente nota de forma ponderada
+    // Favorece la continuidad melódica (movimientos pequeños) y da bonus a las notas que son chord tones
+    function chooseNextNote(lastNote, chordScale, chordData) {
+      let totalWeight = 0;
+      let weights = [];
+      for (let i = 0; i < chordScale.length; i++) {
+        let candidate = chordScale[i];
+        let weight = 1;
+        if (lastNote !== null) {
+          let diff = Math.abs(candidate - lastNote);
+          // Cuanto más pequeño el salto, mayor el peso (1/(1+diff))
+          weight *= 1 / (1 + diff);
+        }
+        // Determinar si la nota es chord tone: se calcula el intervalo relativo (módulo 12)
+        let intervalFromRoot = ((candidate - chordData.root) % 12 + 12) % 12;
+        if (chordData.chordTones.includes(intervalFromRoot)) {
+          weight *= 1.5;  // Bonus si es chord tone
+        }
+        weights.push(weight);
+        totalWeight += weight;
+      }
+      // Seleccionar aleatoriamente según los pesos calculados
+      let r = Math.random() * totalWeight;
+      let sum = 0;
+      for (let i = 0; i < chordScale.length; i++) {
+        sum += weights[i];
+        if (r < sum) {
+          return chordScale[i];
+        }
+      }
+      return chordScale[chordScale.length - 1];
     }
 
     // Asignar el acorde al pulsar el botón "Set Acorde"
@@ -325,20 +366,19 @@
 
     // Manejo de eventos keydown:
     document.addEventListener('keydown', function(e) {
-      // Si la tecla está mapeada, prevenir la acción por defecto (por ejemplo, F1-F12)
+      // Si la tecla está mapeada, se previene la acción por defecto (por ejemplo, en F1-F12)
       if (e.code in keyRowMap) {
         e.preventDefault();
       }
-      // Abortamos si la tecla se mantiene presionada o si la tecla no está mapeada
       if (e.repeat) return;
       if (!(e.code in keyRowMap)) return;
       
-      // Si aún no se ha establecido ningún acorde, no hacemos nada
+      // Si aún no se ha establecido un acorde, no se reproduce nada
       if (!currentChordData) return;
 
-      // Calcular ganancia en función de la fila dinámica asignada
+      // Calcular la ganancia en función de la fila dinámica asignada
       var rowIndex = keyRowMap[e.code]; // 0 (arriba) a 5 (abajo)
-      var relativeY = rowIndex / (totalRows - 1); // Valor de 0 a 1
+      var relativeY = rowIndex / (totalRows - 1);
       var effectiveGain = computeEffectiveGain(relativeY);
 
       // Actualizar visualmente el contenedor de dinámica
@@ -351,12 +391,13 @@
         dynamicContainer.children[rowIndex].style.backgroundColor = randomColor;
       }
 
-      // Elegir aleatoriamente una nota de la escala del acorde actual
+      // Elegir la siguiente nota usando la función ponderada
       if (chordScale.length === 0) return;
-      var index = Math.floor(Math.random() * chordScale.length);
-      var midiNote = chordScale[index];
+      let midiNote = chooseNextNote(lastMidiNote, chordScale, currentChordData);
+      // Actualizar la última nota para la continuidad melódica
+      lastMidiNote = midiNote;
 
-      // Para monofonía: si ya hay una nota activa y el pedal está desactivado, detenerla
+      // Para mantener la monofonía: si ya hay una nota activa y el pedal está apagado, detenerla
       if (currentActiveNote && !pedalOn) {
         currentActiveNote.stop();
         currentActiveNote = null;
@@ -369,7 +410,7 @@
       }
     });
 
-    // Manejo de keyup para detener la nota en caso de pedal apagado
+    // Manejo de keyup para detener la nota (en modo sin pedal)
     document.addEventListener('keyup', function(e) {
       if (currentActiveNote) {
         currentActiveNote.stop();
@@ -383,7 +424,7 @@
       }
     });
 
-    // Reanudar el AudioContext con la primera interacción (click)
+    // Reanudar el AudioContext en la primera interacción (click)
     document.addEventListener('click', function() {
       if (audioContext.state === 'suspended') {
         audioContext.resume().then(() => {
