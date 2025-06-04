@@ -1,445 +1,320 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <!-- Meta viewport para evitar zoom accidental -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Improvisación Melódica sobre un Acorde</title>
-  <!-- Shim para evitar error de require -->
-  <script>
-    window.require = function() {};
-  </script>
-  <!-- Scripts MIDI y Soundfont -->
-  <script src="https://cdn.jsdelivr.net/npm/webmidiapishim"></script>
-  <script src="https://cdn.jsdelivr.net/npm/webmidi@2"></script>
-  <script src="https://cdn.jsdelivr.net/gh/gasman/jasmid@master/stream.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/gasman/jasmid@master/midifile.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/soundfont-player@0.12.0/dist/soundfont-player.min.js"></script>
+  <meta charset="UTF-8" />
+  <title>Teclado Diatónico MIDI</title>
   <style>
-    html {
-      transform: scale(0.9);
-      transform-origin: top center;
-    }
     body {
-      background-color: #FFFFFF;
-      margin: 0;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      padding: 10px;
-      transition: background-color 0.3s ease;
+      font-family: sans-serif;
+      margin: 20px;
     }
-    #container {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border: 6px solid black;
-      padding: 20px;
-      background-color: #FFFFFF;
-      color: black;
-      width: 350px;
-      box-sizing: border-box;
-      z-index: 1;
+    label, select, button {
+      margin: 5px 0;
+      display: block;
     }
-    h1 {
-      margin: 0 0 10px 0;
-      font-size: 2em;
-      text-align: center;
-    }
-    #info {
-      margin-bottom: 10px;
-      font-size: 0.9em;
-      text-align: center;
-    }
-    /* Contenedor visual de la dinámica (6 filas: de Fortissimo a Pianissimo) */
-    #dynamicMarkingsContainer {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      user-select: none;
-      margin-bottom: 10px;
-    }
-    #dynamicMarkingsContainer > div {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid black;
-      font-size: 1em;
-      color: white;
-      background-color: gray;
-      transition: background-color 0.3s ease;
-      padding: 3px;
-      margin: 2px 0;
-      width: 100%;
-    }
-    /* Controles para establecer el acorde */
-    #chordControls {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    #chordInput {
-      padding: 5px;
-      font-size: 1em;
-      width: 100px;
-      text-align: center;
-    }
-    #setChordBtn {
-      padding: 5px 10px;
-      font-size: 1em;
-      background-color: #90EE90;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    /* Botones generales (por ejemplo, el pedal) */
-    #buttons {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-    }
-    #pedalBtn {
-      background-color: #90EE90;
-      color: black;
-      padding: 5px 10px;
-      font-size: 0.9em;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+    #status {
+      margin-top: 10px;
+      color: green;
     }
   </style>
 </head>
 <body>
-  <div id="container">
-    <h1>Improvisación Melódica</h1>
-    <div id="info">
-      Ingresa un acorde (ej.: <em>Cm</em>, <em>Gmaj</em>, <em>E7</em>, <em>Adim</em>) y pulsa "Set Acorde".<br>
-      Luego toca las teclas del teclado físico para improvisar.
-    </div>
-    <!-- Controles para definir el acorde -->
-    <div id="chordControls">
-      <input type="text" id="chordInput" placeholder="Acorde">
-      <button id="setChordBtn">Set Acorde</button>
-    </div>
-    <!-- Contenedor para la representación de la dinámica -->
-    <div id="dynamicMarkingsContainer">
-      <div>Fortissimo</div>
-      <div>Forte</div>
-      <div>Mezzo-forte</div>
-      <div>Mezzo-piano</div>
-      <div>Piano</div>
-      <div>Pianissimo</div>
-    </div>
-    <div id="buttons">
-      <button id="pedalBtn">Pedal ON</button>
-    </div>
-  </div>
+  <h2>Teclado Diatónico MIDI (solo teclas blancas)</h2>
+
+  <!-- Select para elegir entrada y salida MIDI -->
+  <label for="midi-in">Dispositivo MIDI de entrada:</label>
+  <select id="midi-in"></select>
+
+  <label for="midi-out">Dispositivo MIDI de salida:</label>
+  <select id="midi-out"></select>
+
+  <!-- Selección del acorde: raíz y tipo -->
+  <label for="root-select">Raíz del acorde:</label>
+  <select id="root-select">
+    <option value="0">C</option>
+    <option value="1">C♯/D♭</option>
+    <option value="2">D</option>
+    <option value="3">D♯/E♭</option>
+    <option value="4">E</option>
+    <option value="5">F</option>
+    <option value="6">F♯/G♭</option>
+    <option value="7">G</option>
+    <option value="8">G♯/A♭</option>
+    <option value="9">A</option>
+    <option value="10">A♯/B♭</option>
+    <option value="11">B</option>
+  </select>
+
+  <label for="type-select">Tipo de acorde:</label>
+  <select id="type-select">
+    <!-- Por simplicidad, incluyo los tipos más comunes y sus modos asociados -->
+    <option value="ionian">Mayor (Ionian, maj)</option>
+    <option value="dorian">Menor (Dorian, m7)</option>
+    <option value="mixolydian">Dominante 7 (Mixolydian)</option>
+    <option value="lydian">Mayor #11 (Lydian)</option>
+    <option value="locrian">Semidisminuido (m7♭5, Locrian)</option>
+    <option value="phrygian">Phrygian (uso ocasional)</option>
+    <option value="aeolian">Menor natural (Aeolian)</option>
+    <!-- Puedes agregar más modos/escala alterada si quieres -->
+  </select>
+
+  <!-- Botón para aplicar/desactivar re-mapeo -->
+  <button id="enable-button">Habilitar re-mapeo</button>
+  <button id="disable-button" disabled>Desactivar re-mapeo</button>
+
+  <div id="status">Estado: esperando conexión MIDI…</div>
 
   <script>
-    // VARIABLES GLOBALES
-    var audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    var pianoInstrument = null;
-    var pedalOn = true;
-    var currentActiveNote = null; // Para mantener la monofonía
-    var currentChordData = null;  // Objeto con { root, intervals, chordType, chordTones }
-    var chordScale = [];          // Array de notas MIDI resultante del acorde actual
-    var lastMidiNote = null;      // Guarda la última nota reproducida (para favorecer continuidad)
+    // ------------------------------------------
+    // 1. Datos básicos: semitonos blancos y modos
+    // ------------------------------------------
 
-    // Mapeo de teclas a las filas de dinámica (0 a 5: 0 = Fortissimo, 5 = Pianissimo)
-    const keyRowMap = {
-      // Fila 0: Teclas de función (F1-F12)
-      'F1': 0, 'F2': 0, 'F3': 0, 'F4': 0, 'F5': 0, 'F6': 0, 'F7': 0, 'F8': 0, 'F9': 0, 'F10': 0, 'F11': 0, 'F12': 0,
-      // Fila 1: Números y símbolos
-      'Backquote': 1, 'Digit1': 1, 'Digit2': 1, 'Digit3': 1, 'Digit4': 1,
-      'Digit5': 1, 'Digit6': 1, 'Digit7': 1, 'Digit8': 1, 'Digit9': 1, 'Digit0': 1, 'Minus': 1, 'Equal': 1,
-      // Fila 2: Q, W, E, R, T, Y, U, I, O, P
-      'KeyQ': 2, 'KeyW': 2, 'KeyE': 2, 'KeyR': 2, 'KeyT': 2, 'KeyY': 2, 'KeyU': 2, 'KeyI': 2, 'KeyO': 2, 'KeyP': 2,
-      'BracketLeft': 2, 'BracketRight': 2,
-      // Fila 3: A, S, D, F, G, H, J, K, L, ;, '
-      'KeyA': 3, 'KeyS': 3, 'KeyD': 3, 'KeyF': 3, 'KeyG': 3, 'KeyH': 3, 'KeyJ': 3, 'KeyK': 3, 'KeyL': 3, 'Semicolon': 3, 'Quote': 3,
-      // Fila 4: Z, X, C, V, B, N, M, , . /
-      'KeyZ': 4, 'KeyX': 4, 'KeyC': 4, 'KeyV': 4, 'KeyB': 4, 'KeyN': 4, 'KeyM': 4, 'Comma': 4, 'Period': 4, 'Slash': 4,
-      // Fila 5: Barra espaciadora (Pianissimo)
-      'Space': 5
+    // Semitonos de las teclas blancas dentro de una octava (C=0, C#=1, D=2, ... B=11)
+    const WHITE_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
+
+    // Intervalos (en semitonos) de cada modo, partiendo de la tónica (0):
+    const SCALE_INTERVALS = {
+      ionian:      [0, 2, 4, 5, 7, 9, 11],   // Mayor (Escala jónica)
+      dorian:      [0, 2, 3, 5, 7, 9, 10],   // Dórico
+      mixolydian:  [0, 2, 4, 5, 7, 9, 10],   // Mixolidio
+      lydian:      [0, 2, 4, 6, 7, 9, 11],   // Lidio
+      locrian:     [0, 1, 3, 5, 6, 8, 10],   // Locrio
+      phrygian:    [0, 1, 3, 5, 7, 8, 10],   // Frigio
+      aeolian:     [0, 2, 3, 5, 7, 8, 10]    // Eolio (menor natural)
+      // Si quisieras una escala alterada podrías añadirla aquí
     };
-    const totalRows = 6; // Filas 0 a 5
 
-    // Cargar el instrumento de piano (Acoustic Grand Piano)
-    if (window.Soundfont && typeof window.Soundfont.instrument === 'function') {
-      Soundfont.instrument(audioContext, 'acoustic_grand_piano', { soundfont: 'MusyngKite' })
-        .then(function(piano) {
-          pianoInstrument = piano;
-          console.log("Instrumento Acoustic Grand Piano cargado.");
-        })
-        .catch(function(error) {
-          console.error("Error al cargar el instrumento:", error);
-        });
-    } else {
-      console.error("No se encontró el método instrument en Soundfont.");
+    // ------------------------------------------
+    // 2. Variables de estado y referencias DOM
+    // ------------------------------------------
+    let midiAccess = null;
+    let chosenInput = null;
+    let chosenOutput = null;
+    let isRemapOn = false;
+
+    const selInput  = document.getElementById('midi-in');
+    const selOutput = document.getElementById('midi-out');
+    const selRoot   = document.getElementById('root-select');
+    const selType   = document.getElementById('type-select');
+    const btnEnable = document.getElementById('enable-button');
+    const btnDisable= document.getElementById('disable-button');
+    const statusEl  = document.getElementById('status');
+
+    // Mapa para recordar qué nota original disparó qué nota re-mapeada
+    // clave = noteNumber original; valor = noteNumber re-mapeada
+    const activeNotesMap = new Map();
+
+    // ------------------------------------------
+    // 3. Función para iniciar Web MIDI
+    // ------------------------------------------
+    function onMIDISuccess(access) {
+      midiAccess = access;
+      statusEl.textContent = 'Estado: Web MIDI inicializado.';
+
+      // Llenar los <select> con dispositivos disponibles
+      updateDeviceLists();
+
+      // Escuchar cambios en la lista de dispositivos (plug & unplug)
+      midiAccess.onstatechange = updateDeviceLists;
     }
 
-    // Convierte un número MIDI a su nombre (ej. 60 -> "C4")
-    function midiNoteToNoteName(midi) {
-      var octave = Math.floor(midi / 12) - 1;
-      var noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-      return noteNames[midi % 12] + octave;
+    function onMIDIFailure(err) {
+      statusEl.textContent = 'ERROR: No se pudo acceder a Web MIDI — ' + err;
+      statusEl.style.color = 'red';
     }
 
-    // Calcula la ganancia en función de la fila (0 = fuerte, 1 = suave)
-    function computeEffectiveGain(relativeY) {
-      var minGain = 0.55;
-      var maxGain = 1.5;
-      return minGain + (maxGain - minGain) * (1 - relativeY);
-    }
+    function updateDeviceLists() {
+      // Vaciar selects
+      selInput.innerHTML  = '';
+      selOutput.innerHTML = '';
 
-    // Función para reproducir nota con pedal (nota sostenida)
-    function playPianoNote(gain, midiNote) {
-      if (pianoInstrument) {
-        var noteName = midiNoteToNoteName(midiNote);
-        var source = pianoInstrument.play(noteName, audioContext.currentTime, { 
-          gain: gain, 
-          duration: 3.0, 
-          velocity: gain * 127 
-        });
-        var noteGain = audioContext.createGain();
-        noteGain.gain.setValueAtTime(gain, audioContext.currentTime);
-        source.disconnect();
-        source.connect(noteGain);
-        noteGain.gain.setValueAtTime(gain, audioContext.currentTime + 2);
-        noteGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
-        noteGain.connect(audioContext.destination);
-        console.log("Nota reproducida (PEDAL ON):", noteName, "gain:", gain);
-      } else {
-        console.warn("El instrumento aún no se ha cargado.");
+      // Agregar cada entrada
+      midiAccess.inputs.forEach((port) => {
+        const opt = document.createElement('option');
+        opt.value = port.id;
+        opt.textContent = port.name + ' [' + port.manufacturer + ']';
+        selInput.appendChild(opt);
+      });
+
+      // Agregar cada salida
+      midiAccess.outputs.forEach((port) => {
+        const opt = document.createElement('option');
+        opt.value = port.id;
+        opt.textContent = port.name + ' [' + port.manufacturer + ']';
+        selOutput.appendChild(opt);
+      });
+
+      // Si no hay nada, dejar mensaje
+      if (selInput.children.length === 0) {
+        const opt = document.createElement('option');
+        opt.textContent = '— Sin entrada MIDI disponible —';
+        opt.disabled = true;
+        selInput.appendChild(opt);
+      }
+      if (selOutput.children.length === 0) {
+        const opt = document.createElement('option');
+        opt.textContent = '— Sin salida MIDI disponible —';
+        opt.disabled = true;
+        selOutput.appendChild(opt);
       }
     }
 
-    // Función para reproducir nota sin pedal (monofónica, deteniendo la nota al soltar la tecla)
-    function playNoteNonPedal(gain, midiNote) {
-      if (pianoInstrument) {
-        var noteName = midiNoteToNoteName(midiNote);
-        var source = pianoInstrument.play(noteName, audioContext.currentTime, {
-          gain: gain,
-          duration: 100,
-          velocity: gain * 127
-        });
-        var noteGain = audioContext.createGain();
-        noteGain.gain.setValueAtTime(gain, audioContext.currentTime);
-        source.disconnect();
-        source.connect(noteGain);
-        noteGain.connect(audioContext.destination);
-        console.log("Nota reproducida (SIN PEDAL):", noteName, "gain:", gain);
-        return {
-          source: source,
-          gainNode: noteGain,
-          stop: function() {
-            noteGain.gain.cancelScheduledValues(audioContext.currentTime);
-            noteGain.gain.setValueAtTime(noteGain.gain.value, audioContext.currentTime);
-            noteGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
-            setTimeout(function(){
-              if (source.stop) { source.stop(); }
-            }, 250);
-          }
-        };
-      } else {
-        console.warn("El instrumento aún no se ha cargado.");
+    // ------------------------------------------
+    // 4. Detectar selección de puerto MIDI
+    // ------------------------------------------
+    selInput.addEventListener('change', () => {
+      // Cambiamos la entrada seleccionada
+      const id = selInput.value;
+      if (chosenInput) {
+        chosenInput.onmidimessage = null;
       }
-    }
+      chosenInput = midiAccess.inputs.get(id) || null;
 
-    // Función para parsear la cadena del acorde
-    // Devuelve un objeto con: { root, intervals, chordType, chordTones }
-    function parseChord(chordStr) {
-      chordStr = chordStr.trim();
-      // Expresión regular para extraer la nota raíz y los modificadores (ej. "Cm", "Gmaj", "E7", "Adim")
-      var regex = /^([A-G](?:b|#)?)(.*)$/;
-      var match = chordStr.match(regex);
-      if (!match) return null;
-      var root = match[1].toUpperCase();
-      var modifiers = match[2].toLowerCase();
-
-      // Mapear la letra a un offset semitonal (partiendo de C)
-      var noteOffsets = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
-      var rootOffset = noteOffsets[root[0]];
-      if (root.length > 1) {
-        if (root[1] === '#') {
-          rootOffset += 1;
-        } else if (root[1] === 'B' || root[1] === 'b') {
-          rootOffset -= 1;
-        }
+      // Si el re-mapeo ya estaba activo, volvemos a conectar
+      if (isRemapOn && chosenInput) {
+        chosenInput.onmidimessage = handleMIDIMessage;
       }
-      // Definir el root en la octava 4 (C4 = 60)
-      var midiRoot = 60 + rootOffset;
+    });
 
-      var scaleIntervals;
-      var chordType;
-      var chordTones;
-      if (modifiers.includes("dim")) {
-        chordType = "dim";
-        chordTones = [0, 3, 6];
-        scaleIntervals = [0,2,3,5,6,8,9,11];
-      } else if (modifiers.includes("maj")) {
-        chordType = "maj";
-        chordTones = [0,4,7];
-        scaleIntervals = [0,2,4,5,7,9,11];
-      } else if (modifiers.includes("7")) {
-        chordType = "7";
-        chordTones = [0,4,7,10];
-        scaleIntervals = [0,2,4,5,7,9,10];
-      } else if (modifiers.includes("m")) {
-        chordType = "m";
-        chordTones = [0,3,7];
-        scaleIntervals = [0,2,3,5,7,9,10];
-      } else {
-        chordType = "maj";
-        chordTones = [0,4,7];
-        scaleIntervals = [0,2,4,5,7,9,11];
-      }
+    selOutput.addEventListener('change', () => {
+      const id = selOutput.value;
+      chosenOutput = midiAccess.outputs.get(id) || null;
+    });
 
-      return { root: midiRoot, intervals: scaleIntervals, chordType: chordType, chordTones: chordTones };
-    }
-
-    // Función para establecer el acorde actual y generar la escala (dos octavas)
-    function setChord(chordStr) {
-      var parsed = parseChord(chordStr);
-      if (!parsed) {
-        alert("Acorde no reconocido. Intenta por ejemplo: Cm, Gmaj, E7, Adim");
+    // ------------------------------------------
+    // 5. Botones para habilitar/deshabilitar
+    // ------------------------------------------
+    btnEnable.addEventListener('click', () => {
+      if (!chosenInput || !chosenOutput) {
+        alert('Por favor, selecciona simultáneamente una entrada y una salida MIDI.');
         return;
       }
-      currentChordData = parsed;
-      // Generar la escala a partir de los intervalos: una octava base y una superior
-      var baseOctave = parsed.intervals.map(i => parsed.root + i);
-      var upperOctave = parsed.intervals.map(i => parsed.root + 12 + i);
-      chordScale = baseOctave.concat(upperOctave);
-      // Reiniciamos la última nota para iniciar la improvisación de forma coherente
-      lastMidiNote = null;
-      console.log("Acorde establecido:", chordStr, "-> escala:", chordScale);
+      // Desactivar Local Control del teclado (CC 122 = Local Control On/Off, 0 = Off)
+      // Esto hace que el teclado no suene internamente, solo envíe MIDI externo.
+      // Su canal por defecto es el 1 (0) a menos que tu dispositivo use otro canal.
+      chosenOutput.send([0xB0, 122, 0]);
+
+      // Limpiar mapa de notas activas
+      activeNotesMap.clear();
+      // Conectar listener
+      chosenInput.onmidimessage = handleMIDIMessage;
+      isRemapOn = true;
+      btnEnable.disabled  = true;
+      btnDisable.disabled = false;
+      statusEl.textContent = 'Estado: Re-mapeo activo. Toca las teclas blancas.';
+    });
+
+    btnDisable.addEventListener('click', () => {
+      if (chosenInput) chosenInput.onmidimessage = null;
+      // Volver a activar Local Control (CC 122 = 127 → On)
+      if (chosenOutput) chosenOutput.send([0xB0, 122, 127]);
+
+      // Apagar cualquier nota pendiente
+      activeNotesMap.forEach((mappedNote, orig) => {
+        // Enviar note off para cada nota re-mapeada que quede en activo
+        chosenOutput.send([0x80 | 0, mappedNote, 0]);
+      });
+      activeNotesMap.clear();
+
+      isRemapOn = false;
+      btnEnable.disabled  = false;
+      btnDisable.disabled = true;
+      statusEl.textContent = 'Estado: Re-mapeo desactivado.';
+    });
+
+    // ------------------------------------------
+    // 6. Cálculo de la escala según acorde elegido
+    // ------------------------------------------
+    function getScaleForChord() {
+      const rootPc = parseInt(selRoot.value);       // 0 = C, 1 = C#, etc.
+      const mode   = selType.value;                 // ‘ionian’, ‘dorian’, etc.
+      const intervals = SCALE_INTERVALS[mode];      // [0,2,4,5,7,9,11], etc.
+
+      // Generamos un array con los 7 “pitch classes” absolutas de la escala:
+      // scalePcs[i] = (rootPc + intervals[i]) % 12
+      const scalePcs = intervals.map(i => (rootPc + i) % 12);
+      return scalePcs;  // e.g. para G mixolydian, [7,9,11,0,2,4,5]
     }
 
-    // Función que elige la siguiente nota de forma ponderada
-    // Favorece la continuidad melódica (movimientos pequeños) y da bonus a las notas que son chord tones
-    function chooseNextNote(lastNote, chordScale, chordData) {
-      let totalWeight = 0;
-      let weights = [];
-      for (let i = 0; i < chordScale.length; i++) {
-        let candidate = chordScale[i];
-        let weight = 1;
-        if (lastNote !== null) {
-          let diff = Math.abs(candidate - lastNote);
-          // Cuanto más pequeño el salto, mayor el peso (1/(1+diff))
-          weight *= 1 / (1 + diff);
-        }
-        // Determinar si la nota es chord tone: se calcula el intervalo relativo (módulo 12)
-        let intervalFromRoot = ((candidate - chordData.root) % 12 + 12) % 12;
-        if (chordData.chordTones.includes(intervalFromRoot)) {
-          weight *= 1.5;  // Bonus si es chord tone
-        }
-        weights.push(weight);
-        totalWeight += weight;
+    // ------------------------------------------
+    // 7. Función de re-mapeo: tecla blanca → nota de escala
+    // ------------------------------------------
+    function mapToScale(originalNoteNumber) {
+      // originalNoteNumber es 0..127
+      const pc = originalNoteNumber % 12;         // pitch class de la tecla presionada
+      const octave = Math.floor(originalNoteNumber / 12);
+      const scalePcs = getScaleForChord();
+
+      // 1) Determinar si ‘pc’ corresponde a una tecla blanca (C, D, E, F, G, A, B)
+      const whiteIdx = WHITE_SEMITONES.indexOf(pc);
+      if (whiteIdx === -1) {
+        // No es blanca → devolvemos null para “ignorar”
+        return null;
       }
-      // Seleccionar aleatoriamente según los pesos calculados
-      let r = Math.random() * totalWeight;
-      let sum = 0;
-      for (let i = 0; i < chordScale.length; i++) {
-        sum += weights[i];
-        if (r < sum) {
-          return chordScale[i];
-        }
-      }
-      return chordScale[chordScale.length - 1];
+
+      // 2) Tomamos el pitch class de la escala en esa posición (whiteIdx)
+      const targetPc = scalePcs[whiteIdx];  // valor entre 0 y 11
+
+      // 3) Construir el número MIDI en la misma octava que la original:
+      //    notaRemap = targetPc + (octave * 12).
+      //    Si targetPc > pc, a veces quizá suene un semitono más alto en la misma octava.
+      //    Para simplificar, aquí forzamos queda en la MISMA octava que la original:  
+      const mappedNote = targetPc + octave * 12;
+
+      // IMPORTANTE: si targetPc + (octave*12) cae fuera de [0..127], habría que ajustarlo.
+      if (mappedNote < 0 || mappedNote > 127) return null;
+      return mappedNote;
     }
 
-    // Asignar el acorde al pulsar el botón "Set Acorde"
-    document.getElementById('setChordBtn').addEventListener('click', function() {
-      var chordStr = document.getElementById('chordInput').value;
-      setChord(chordStr);
-    });
+    // ------------------------------------------
+    // 8. Handler de mensajes MIDI entrantes
+    // ------------------------------------------
+    function handleMIDIMessage(event) {
+      const [status, data1, data2] = event.data;
+      const command = status & 0xF0;
+      const channel = status & 0x0F;
 
-    // Manejo de eventos keydown:
-    document.addEventListener('keydown', function(e) {
-      // Si la tecla está mapeada, se previene la acción por defecto (por ejemplo, en F1-F12)
-      if (e.code in keyRowMap) {
-        e.preventDefault();
-      }
-      if (e.repeat) return;
-      if (!(e.code in keyRowMap)) return;
-      
-      // Si aún no se ha establecido un acorde, no se reproduce nada
-      if (!currentChordData) return;
+      // Solo re-mapear note on (0x90) y note off (0x80) del canal 0 (0 = canal 1), 
+      // aunque podrías adaptarlo para otros canales.
+      if (command === 0x90 && data2 > 0) {
+        // Note On
+        const origNote = data1;
+        const velocity = data2;
+        const remapped = mapToScale(origNote);
 
-      // Calcular la ganancia en función de la fila dinámica asignada
-      var rowIndex = keyRowMap[e.code]; // 0 (arriba) a 5 (abajo)
-      var relativeY = rowIndex / (totalRows - 1);
-      var effectiveGain = computeEffectiveGain(relativeY);
+        if (remapped !== null) {
+          // Guardamos que origNote → remapped
+          activeNotesMap.set(origNote, remapped);
+          // Enviamos Note On al dispositivo de salida
+          chosenOutput.send([0x90 | channel, remapped, velocity]);
+        }
+        // Si remapped === null (tecla negra), no hacemos nada (ignorar).
+      }
+      else if ((command === 0x80) || (command === 0x90 && data2 === 0)) {
+        // Note Off (o Note On con vel=0)
+        const origNote = data1;
+        // Buscamos si teníamos almacenada una nota re-mapeada
+        if (activeNotesMap.has(origNote)) {
+          const remapped = activeNotesMap.get(origNote);
+          chosenOutput.send([0x80 | channel, remapped, 0]);
+          activeNotesMap.delete(origNote);
+        }
+        // Si no existía en el Map (porque era negra o no estaba mapeada), nada que hacer.
+      }
+      // Podrías añadir aquí más lógica (p. ej. pasar a través mensajes de CC),
+      // pero la idea principal es re-mapear nota blanca → nota de escala.
+    }
 
-      // Actualizar visualmente el contenedor de dinámica
-      var dynamicContainer = document.getElementById('dynamicMarkingsContainer');
-      for (var i = 0; i < dynamicContainer.children.length; i++) {
-        dynamicContainer.children[i].style.backgroundColor = 'gray';
-      }
-      var randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
-      if (dynamicContainer.children[rowIndex]) {
-        dynamicContainer.children[rowIndex].style.backgroundColor = randomColor;
-      }
-
-      // Elegir la siguiente nota usando la función ponderada
-      if (chordScale.length === 0) return;
-      let midiNote = chooseNextNote(lastMidiNote, chordScale, currentChordData);
-      // Actualizar la última nota para la continuidad melódica
-      lastMidiNote = midiNote;
-
-      // Para mantener la monofonía: si ya hay una nota activa y el pedal está apagado, detenerla
-      if (currentActiveNote && !pedalOn) {
-        currentActiveNote.stop();
-        currentActiveNote = null;
-      }
-      // Reproducir la nota según el estado del pedal
-      if (pedalOn) {
-        playPianoNote(effectiveGain, midiNote);
-      } else {
-        currentActiveNote = playNoteNonPedal(effectiveGain, midiNote);
-      }
-    });
-
-    // Manejo de keyup para detener la nota (en modo sin pedal)
-    document.addEventListener('keyup', function(e) {
-      if (currentActiveNote) {
-        currentActiveNote.stop();
-        currentActiveNote = null;
-      }
-      // Restaurar el color de la fila correspondiente a gris
-      var dynamicContainer = document.getElementById('dynamicMarkingsContainer');
-      var rowIndex = keyRowMap[e.code];
-      if (dynamicContainer.children[rowIndex]) {
-        dynamicContainer.children[rowIndex].style.backgroundColor = 'gray';
-      }
-    });
-
-    // Reanudar el AudioContext en la primera interacción (click)
-    document.addEventListener('click', function() {
-      if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-          console.log("AudioContext reanudado");
-        });
-      }
-    });
-
-    // Botón para alternar el estado del pedal
-    document.getElementById('pedalBtn').addEventListener('click', function() {
-      pedalOn = !pedalOn;
-      this.textContent = pedalOn ? "Pedal ON" : "Pedal OFF";
-      this.style.backgroundColor = pedalOn ? "#90EE90" : "#ADD8E6";
-      console.log("Pedal:", pedalOn ? "ON" : "OFF");
-    });
+    // ------------------------------------------
+    // 9. Inicializar todo
+    // ------------------------------------------
+    if (navigator.requestMIDIAccess) {
+      navigator.requestMIDIAccess({ sysex: false })
+        .then(onMIDISuccess, onMIDIFailure);
+    } else {
+      statusEl.textContent = 'ERROR: Tu navegador no soporta Web MIDI.';
+      statusEl.style.color = 'red';
+    }
   </script>
 </body>
 </html>
