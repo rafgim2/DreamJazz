@@ -2,65 +2,126 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Teclado Diatónico MIDI</title>
+  <title>DreamJazz</title>
   <style>
+    /* Fondo de la página en azul pastel claro */
     body {
+      margin: 0;
+      padding: 0;
+      background-color: #B3E5FC; /* azul pastel claro */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       font-family: sans-serif;
-      margin: 20px;
     }
+
+    /* Contenedor centrado con marco amarillo y bordes redondeados */
+    .container {
+      border: 5px solid #FFD700; /* marco amarillo */
+      border-radius: 15px;
+      padding: 20px 30px;
+      background-color: #ffffff; /* fondo blanco dentro del marco */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 2em;
+      color: #333;
+    }
+
+    .byline {
+      margin-bottom: 20px;
+      font-size: 0.9em;
+    }
+
+    .byline a {
+      color: #333;
+      text-decoration: none;
+    }
+
     label, select, button {
-      margin: 5px 0;
+      margin: 8px 0;
       display: block;
+      width: 100%;
+      font-size: 1em;
     }
+
+    select, button {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fafafa;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #e0e0e0;
+      cursor: not-allowed;
+    }
+
     #status {
-      margin-top: 10px;
+      margin-top: 12px;
       color: green;
+      font-size: 0.9em;
     }
   </style>
 </head>
 <body>
-  <h2>Teclado Diatónico MIDI (solo teclas blancas)</h2>
+  <div class="container">
+    <h1>DreamJazz</h1>
+    <div class="byline">
+      <a href="https://www.youtube.com/@rafgim" target="_blank">© By Rafael Gimeno</a>
+    </div>
 
-  <!-- Select para elegir entrada y salida MIDI -->
-  <label for="midi-in">Dispositivo MIDI de entrada:</label>
-  <select id="midi-in"></select>
+    <!-- Select para elegir entrada y salida MIDI -->
+    <label for="midi-in">Dispositivo MIDI de entrada:</label>
+    <select id="midi-in"></select>
 
-  <label for="midi-out">Dispositivo MIDI de salida:</label>
-  <select id="midi-out"></select>
+    <label for="midi-out">Dispositivo MIDI de salida:</label>
+    <select id="midi-out"></select>
 
-  <!-- Selección del acorde: raíz y tipo -->
-  <label for="root-select">Raíz del acorde:</label>
-  <select id="root-select">
-    <option value="0">C</option>
-    <option value="1">C♯/D♭</option>
-    <option value="2">D</option>
-    <option value="3">D♯/E♭</option>
-    <option value="4">E</option>
-    <option value="5">F</option>
-    <option value="6">F♯/G♭</option>
-    <option value="7">G</option>
-    <option value="8">G♯/A♭</option>
-    <option value="9">A</option>
-    <option value="10">A♯/B♭</option>
-    <option value="11">B</option>
-  </select>
+    <!-- Selección del acorde: raíz y tipo -->
+    <label for="root-select">Raíz del acorde:</label>
+    <select id="root-select">
+      <option value="0">C</option>
+      <option value="1">C♯/D♭</option>
+      <option value="2">D</option>
+      <option value="3">D♯/E♭</option>
+      <option value="4">E</option>
+      <option value="5">F</option>
+      <option value="6">F♯/G♭</option>
+      <option value="7">G</option>
+      <option value="8">G♯/A♭</option>
+      <option value="9">A</option>
+      <option value="10">A♯/B♭</option>
+      <option value="11">B</option>
+    </select>
 
-  <label for="type-select">Tipo de acorde:</label>
-  <select id="type-select">
-    <option value="ionian">Mayor (Ionian, maj)</option>
-    <option value="dorian">Menor (Dorian, m7)</option>
-    <option value="mixolydian">Dominante 7 (Mixolydian)</option>
-    <option value="lydian">Mayor #11 (Lydian)</option>
-    <option value="locrian">Semidisminuido (m7♭5, Locrian)</option>
-    <option value="phrygian">Phrygian (uso ocasional)</option>
-    <option value="aeolian">Menor natural (Aeolian)</option>
-  </select>
+    <label for="type-select">Tipo de acorde:</label>
+    <select id="type-select">
+      <option value="ionian">Mayor (Ionian, maj)</option>
+      <option value="dorian">Menor (Dorian, m7)</option>
+      <option value="mixolydian">Dominante 7 (Mixolydian)</option>
+      <option value="lydian">Mayor #11 (Lydian)</option>
+      <option value="locrian">Semidisminuido (m7♭5, Locrian)</option>
+      <option value="phrygian">Phrygian (uso ocasional)</option>
+      <option value="aeolian">Menor natural (Aeolian)</option>
+    </select>
 
-  <!-- Botón para aplicar/desactivar re-mapeo -->
-  <button id="enable-button">Habilitar re-mapeo</button>
-  <button id="disable-button" disabled>Desactivar re-mapeo</button>
+    <!-- Botones para habilitar/deshabilitar re-mapeo -->
+    <button id="enable-button">Habilitar re-mapeo</button>
+    <button id="disable-button" disabled>Desactivar re-mapeo</button>
 
-  <div id="status">Estado: esperando conexión MIDI…</div>
+    <div id="status">Estado: esperando conexión MIDI…</div>
+  </div>
 
   <script>
     // ------------------------------------------
@@ -142,7 +203,7 @@
         selOutput.appendChild(opt);
       }
 
-      // Si al actualizar hay al menos uno, lo asignamos como “elegido” por defecto:
+      // Si aún no hemos asignado uno y hay al menos uno, asignamos el primero
       if (!chosenInput && midiAccess.inputs.size > 0) {
         const firstId = midiAccess.inputs.keys().next().value;
         selInput.value = firstId;
@@ -175,8 +236,7 @@
     // 5. Botones Habilitar/Deshabilitar re-mapeo
     // ------------------------------------------
     btnEnable.addEventListener('click', () => {
-      // En lugar de fiarnos de chosenInput/Output tal como vinieran,
-      // leemos siempre lo que haya seleccionado el usuario en ese momento:
+      // Leemos nuevamente lo seleccionado en ese momento
       const inputId  = selInput.value;
       const outputId = selOutput.value;
       chosenInput  = midiAccess.inputs.get(inputId)  || null;
@@ -187,7 +247,7 @@
         return;
       }
 
-      // Desactivamos local control (CC122 = 0)
+      // Desactivar Local Control (CC 122 = 0)
       chosenOutput.send([0xB0, 122, 0]);
 
       activeNotesMap.clear();
@@ -201,11 +261,11 @@
     btnDisable.addEventListener('click', () => {
       if (chosenInput) chosenInput.onmidimessage = null;
       if (chosenOutput) {
-        // Reactivamos local control (CC122 = 127)
+        // Reactivar Local Control (CC 122 = 127)
         chosenOutput.send([0xB0, 122, 127]);
 
         // Apagar notas que pudieran quedar colgadas
-        activeNotesMap.forEach((mappedNote, orig) => {
+        activeNotesMap.forEach((mappedNote) => {
           chosenOutput.send([0x80, mappedNote, 0]);
         });
         activeNotesMap.clear();
@@ -245,14 +305,22 @@
     }
 
     // ------------------------------------------
-    // 8. Procesar mensajes MIDI entrantes
+    // 8. Procesar mensajes MIDI entrantes (incluye pedal)
     // ------------------------------------------
     function handleMIDIMessage(event) {
       const [status, data1, data2] = event.data;
       const command = status & 0xF0;
       const channel = status & 0x0F;
 
-      if (command === 0x90 && data2 > 0) { // Note On
+      // 1) Pasar todos los mensajes de Control Change (CC), incluido el pedal (CC 64)
+      if (command === 0xB0) {
+        chosenOutput.send(event.data);
+        return;
+      }
+
+      // 2) Note On (0x90) y Note Off (0x80)
+      if (command === 0x90 && data2 > 0) {
+        // Note On
         const origNote = data1;
         const velocity = data2;
         const remapped = mapToScale(origNote);
@@ -261,7 +329,8 @@
           chosenOutput.send([0x90 | channel, remapped, velocity]);
         }
       }
-      else if ((command === 0x80) || (command === 0x90 && data2 === 0)) {
+      else if (command === 0x80 || (command === 0x90 && data2 === 0)) {
+        // Note Off (o Note On con vel=0)
         const origNote = data1;
         if (activeNotesMap.has(origNote)) {
           const remapped = activeNotesMap.get(origNote);
@@ -269,6 +338,7 @@
           activeNotesMap.delete(origNote);
         }
       }
+      // Otros mensajes MIDI se pueden ignorar o agregar según necesidad
     }
 
     // ------------------------------------------
