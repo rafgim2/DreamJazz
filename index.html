@@ -44,25 +44,51 @@
       text-decoration: none;
     }
 
-    label, select, button {
-      margin: 8px 0;
-      display: block;
-      width: 100%;
-      font-size: 1em;
+    /* Estilo para las agrupaciones de botones */
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 15px;
     }
 
-    select, button {
+    .button-group button {
+      flex: 1 1 30%;
+      min-width: 60px;
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 5px;
       background-color: #fafafa;
-    }
-
-    button {
+      font-size: 0.9em;
       cursor: pointer;
     }
 
-    button:disabled {
+    .button-group button.selected {
+      background-color: #FFD700;
+      color: #fff;
+      border-color: #e5c100;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      font-size: 1em;
+    }
+
+    select, button.standard {
+      margin: 8px 0;
+      display: block;
+      width: 100%;
+      font-size: 1em;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fafafa;
+      cursor: pointer;
+    }
+
+    button.standard:disabled {
       background-color: #e0e0e0;
       cursor: not-allowed;
     }
@@ -81,61 +107,58 @@
       <a href="https://www.youtube.com/@rafgim" target="_blank">© By Rafael Gimeno</a>
     </div>
 
+    <!-- Selección táctil de raíz -->
+    <label>Raíz del acorde:</label>
+    <div id="root-buttons" class="button-group">
+      <button data-root="0">C</button>
+      <button data-root="1">C♯/D♭</button>
+      <button data-root="2">D</button>
+      <button data-root="3">D♯/E♭</button>
+      <button data-root="4">E</button>
+      <button data-root="5">F</button>
+      <button data-root="6">F♯/G♭</button>
+      <button data-root="7">G</button>
+      <button data-root="8">G♯/A♭</button>
+      <button data-root="9">A</button>
+      <button data-root="10">A♯/B♭</button>
+      <button data-root="11">B</button>
+    </div>
+
+    <!-- Selección táctil de tipo de acorde / escala -->
+    <label>Tipo de acorde / escala:</label>
+    <div id="type-buttons" class="button-group">
+      <!-- Modos diatónicos -->
+      <button data-type="ionian">Ionian</button>
+      <button data-type="dorian">Dorian</button>
+      <button data-type="phrygian">Phrygian</button>
+      <button data-type="lydian">Lydian</button>
+      <button data-type="mixolydian">Mixolydian</button>
+      <button data-type="aeolian">Aeolian</button>
+      <button data-type="locrian">Locrian</button>
+      <!-- Menores modernas -->
+      <button data-type="melodicMinor">Melódica</button>
+      <button data-type="harmonicMinor">Armónica</button>
+      <!-- Escala alterada -->
+      <button data-type="altered">Alterada</button>
+      <!-- Disminuidas -->
+      <button data-type="diminished_whole_half">Dim WH</button>
+      <button data-type="diminished_half_whole">Dim HW</button>
+      <!-- Pentatónicas y Blues -->
+      <button data-type="pentatonicMajor">Pent. May</button>
+      <button data-type="pentatonicMinor">Pent. Men</button>
+      <button data-type="blues">Blues</button>
+    </div>
+
     <!-- Select para elegir entrada y salida MIDI -->
-    <label for="midi-in">Dispositivo MIDI de entrada:</label>
+    <label for="midi-in">Entrada MIDI:</label>
     <select id="midi-in"></select>
 
-    <label for="midi-out">Dispositivo MIDI de salida:</label>
+    <label for="midi-out">Salida MIDI:</label>
     <select id="midi-out"></select>
 
-    <!-- Selección del acorde: raíz y tipo -->
-    <label for="root-select">Raíz del acorde:</label>
-    <select id="root-select">
-      <option value="0">C</option>
-      <option value="1">C♯/D♭</option>
-      <option value="2">D</option>
-      <option value="3">D♯/E♭</option>
-      <option value="4">E</option>
-      <option value="5">F</option>
-      <option value="6">F♯/G♭</option>
-      <option value="7">G</option>
-      <option value="8">G♯/A♭</option>
-      <option value="9">A</option>
-      <option value="10">A♯/B♭</option>
-      <option value="11">B</option>
-    </select>
-
-    <label for="type-select">Tipo de acorde / escala:</label>
-    <select id="type-select">
-      <!-- Modos diatónicos básicos -->
-      <option value="ionian">Mayor (Ionian)</option>
-      <option value="dorian">Menor (Dorian)</option>
-      <option value="phrygian">Phrygian</option>
-      <option value="lydian">Lydian (#11)</option>
-      <option value="mixolydian">Mixolydian (Dominante 7)</option>
-      <option value="aeolian">Menor natural (Aeolian)</option>
-      <option value="locrian">Locrian (m7♭5)</option>
-
-      <!-- Escalas menores melódicas y armónicas (modos) -->
-      <option value="melodicMinor">Melódica Ascendente (Melodic Minor)</option>
-      <option value="harmonicMinor">Menor Armónica (Harmonic Minor)</option>
-
-      <!-- Escala alterada / superlocria -->
-      <option value="altered">Alterada (Superlocrio)</option>
-
-      <!-- Escalas disminuidas -->
-      <option value="diminished_whole_half">Disminuida (Whole–Half)</option>
-      <option value="diminished_half_whole">Disminuida (Half–Whole)</option>
-
-      <!-- Escalas pentatónicas y blues -->
-      <option value="pentatonicMajor">Pentatónica Mayor</option>
-      <option value="pentatonicMinor">Pentatónica Menor</option>
-      <option value="blues">Escala Blues</option>
-    </select>
-
     <!-- Botones para habilitar/deshabilitar re-mapeo -->
-    <button id="enable-button">Habilitar re-mapeo</button>
-    <button id="disable-button" disabled>Desactivar re-mapeo</button>
+    <button id="enable-button" class="standard">Habilitar re-mapeo</button>
+    <button id="disable-button" class="standard" disabled>Desactivar re-mapeo</button>
 
     <div id="status">Estado: esperando conexión MIDI…</div>
   </div>
@@ -149,31 +172,29 @@
     // Intervalos (en semitonos) de cada escala/modo
     const SCALE_INTERVALS = {
       // Modos diatónicos
-      ionian:      [0, 2, 4, 5, 7, 9, 11],   // Escala mayor
-      dorian:      [0, 2, 3, 5, 7, 9, 10],   // Modo dórico
-      phrygian:    [0, 1, 3, 5, 7, 8, 10],   // Frigio
-      lydian:      [0, 2, 4, 6, 7, 9, 11],   // Lidio (#11)
-      mixolydian:  [0, 2, 4, 5, 7, 9, 10],   // Mixolidio (7)
-      aeolian:     [0, 2, 3, 5, 7, 8, 10],   // Eolio (menor natural)
-      locrian:     [0, 1, 3, 5, 6, 8, 10],   // Locrio (m7♭5)
+      ionian:      [0, 2, 4, 5, 7, 9, 11],
+      dorian:      [0, 2, 3, 5, 7, 9, 10],
+      phrygian:    [0, 1, 3, 5, 7, 8, 10],
+      lydian:      [0, 2, 4, 6, 7, 9, 11],
+      mixolydian:  [0, 2, 4, 5, 7, 9, 10],
+      aeolian:     [0, 2, 3, 5, 7, 8, 10],
+      locrian:     [0, 1, 3, 5, 6, 8, 10],
 
       // Escalas menores modernas
-      melodicMinor:    [0, 2, 3, 5, 7, 9, 11],   // Menor melódica ascendente
-      harmonicMinor:   [0, 2, 3, 5, 7, 8, 11],    // Menor armónica
+      melodicMinor:    [0, 2, 3, 5, 7, 9, 11],
+      harmonicMinor:   [0, 2, 3, 5, 7, 8, 11],
 
-      // Escala alterada (Superlocrio, modo 7 de menor melódica)
-      altered:     [0, 1, 3, 4, 6, 8, 10],   // b9, #9, #11, b13
+      // Escala alterada (Superlocrio)
+      altered:     [0, 1, 3, 4, 6, 8, 10],
 
-      // Escalas disminuidas
-      // Whole–Half diminished: 8 sonidos, vamos a tomar sólo 7 posiciones (las blancas)
-      diminished_whole_half: [0, 2, 3, 5, 6, 8, 9, 11], // 8 tonos; en la práctica mapeamos 7 blancas
-      // Half–Whole diminished: 8 sonidos
+      // Escalas disminuidas (8 notas, se usan las primeras 7)
+      diminished_whole_half: [0, 2, 3, 5, 6, 8, 9, 11],
       diminished_half_whole: [0, 1, 3, 4, 6, 7, 9, 10],
 
-      // Pentatónicas y Blues (5 o 6 notas)
-      pentatonicMajor: [0, 2, 4, 7, 9],  // C D E G A
-      pentatonicMinor: [0, 3, 5, 7, 10], // C Eb F G Bb
-      blues:           [0, 3, 5, 6, 7, 10] // C Eb F F# G Bb (6 notas)
+      // Pentatónicas y Blues
+      pentatonicMajor: [0, 2, 4, 7, 9],
+      pentatonicMinor: [0, 3, 5, 7, 10],
+      blues:           [0, 3, 5, 6, 7, 10]
     };
 
     // ------------------------------------------
@@ -184,18 +205,56 @@
     let chosenOutput = null;
     let isRemapOn = false;
 
-    const selInput   = document.getElementById('midi-in');
-    const selOutput  = document.getElementById('midi-out');
-    const selRoot    = document.getElementById('root-select');
-    const selType    = document.getElementById('type-select');
-    const btnEnable  = document.getElementById('enable-button');
-    const btnDisable = document.getElementById('disable-button');
-    const statusEl   = document.getElementById('status');
+    let currentRoot = 0;      // valor de 0 a 11
+    let currentType = 'ionian';
+
+    const rootButtons = document.querySelectorAll('#root-buttons button');
+    const typeButtons = document.querySelectorAll('#type-buttons button');
+    const selInput     = document.getElementById('midi-in');
+    const selOutput    = document.getElementById('midi-out');
+    const btnEnable    = document.getElementById('enable-button');
+    const btnDisable   = document.getElementById('disable-button');
+    const statusEl     = document.getElementById('status');
 
     const activeNotesMap = new Map();
 
     // ------------------------------------------
-    // 3. Cargar Web MIDI y poblar listas
+    // 3. Funciones para gestionar selección táctil
+    // ------------------------------------------
+    function selectRoot(value) {
+      currentRoot = value;
+      rootButtons.forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.root) === value);
+      });
+    }
+
+    function selectType(value) {
+      currentType = value;
+      typeButtons.forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.type === value);
+      });
+    }
+
+    // Inicializar estados por defecto (C / Ionian)
+    selectRoot(0);
+    selectType('ionian');
+
+    // Añadir listeners a cada botón de raíz
+    rootButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectRoot(parseInt(btn.dataset.root));
+      });
+    });
+
+    // Añadir listeners a cada botón de tipo
+    typeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectType(btn.dataset.type);
+      });
+    });
+
+    // ------------------------------------------
+    // 4. Cargar Web MIDI y poblar listas
     // ------------------------------------------
     function onMIDISuccess(access) {
       midiAccess = access;
@@ -255,7 +314,7 @@
     }
 
     // ------------------------------------------
-    // 4. Cuando el usuario cambia manualmente el select
+    // 5. Cambio manual en selects MIDI
     // ------------------------------------------
     selInput.addEventListener('change', () => {
       const id = selInput.value;
@@ -271,7 +330,7 @@
     });
 
     // ------------------------------------------
-    // 5. Botones Habilitar/Deshabilitar re-mapeo
+    // 6. Botones Habilitar/Deshabilitar re-mapeo
     // ------------------------------------------
     btnEnable.addEventListener('click', () => {
       // Leemos nuevamente lo seleccionado en ese momento
@@ -316,21 +375,17 @@
     });
 
     // ------------------------------------------
-    // 6. Cálculo de escala según acorde
+    // 7. Cálculo de escala según acorde
     // ------------------------------------------
     function getScaleForChord() {
-      const rootPc = parseInt(selRoot.value);
-      const mode   = selType.value;
+      const rootPc = currentRoot;
+      const mode   = currentType;
       const intervals = SCALE_INTERVALS[mode] || [];
-      // En el caso de las escalas de 8 notas (disminuidas), 
-      // usaremos solo las primeras 7 posiciones (teclas blancas).
-      // Para pentatónicas/blues, también tendremos menos de 7,
-      // y las teclas “blancas extra” se ignorarán en mapToScale().
       return intervals.map(i => (rootPc + i) % 12);
     }
 
     // ------------------------------------------
-    // 7. Mapeo nota entrante → nota de escala
+    // 8. Mapeo nota entrante → nota de escala
     // ------------------------------------------
     function mapToScale(originalNoteNumber) {
       const pc     = originalNoteNumber % 12;
@@ -351,7 +406,7 @@
     }
 
     // ------------------------------------------
-    // 8. Procesar mensajes MIDI entrantes (incluye pedal)
+    // 9. Procesar mensajes MIDI entrantes (incluye pedal)
     // ------------------------------------------
     function handleMIDIMessage(event) {
       const [status, data1, data2] = event.data;
@@ -388,7 +443,7 @@
     }
 
     // ------------------------------------------
-    // 9. Inicializar Web MIDI
+    // 10. Inicializar Web MIDI
     // ------------------------------------------
     if (navigator.requestMIDIAccess) {
       navigator.requestMIDIAccess({ sysex: false })
