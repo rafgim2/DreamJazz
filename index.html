@@ -390,7 +390,7 @@
 
     // ------------------------------------------
     // 8. Mapeo nota entrante → nota de escala ajustado
-    //     para que mantenga orden ascendente/descendente
+    //     para que repita notas en pentatónicas/blues
     // ------------------------------------------
     function mapToScale(originalNoteNumber) {
       const pc     = originalNoteNumber % 12;
@@ -400,18 +400,15 @@
       const whiteIdx = WHITE_SEMITONES.indexOf(pc);
       if (whiteIdx === -1) return null;
 
-      // Si scalePcs tiene menos de whiteIdx+1 elementos (pentatónica o blues),
-      // ignoramos índices que excedan su longitud.
-      if (whiteIdx >= scalePcs.length) return null;
+      // En lugar de descartar, envolvemos el índice:
+      const idx = whiteIdx % scalePcs.length;
+      const targetPc = scalePcs[idx];
 
-      const targetPc = scalePcs[whiteIdx];
-      // Intentamos en la misma octava
+      // Intentamos en la misma octava; si queda por debajo, subimos una octava:
       let mapped = targetPc + octave * 12;
-      // Si esa nota quedara por debajo de la original, subimos una octava
       if (mapped < originalNoteNumber) {
         mapped += 12;
       }
-      // Si sobra y queda fuera de rango MIDI, descartamos
       if (mapped < 0 || mapped > 127) return null;
       return mapped;
     }
