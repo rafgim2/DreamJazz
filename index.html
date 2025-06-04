@@ -47,7 +47,6 @@
 
   <label for="type-select">Tipo de acorde:</label>
   <select id="type-select">
-    <!-- Por simplicidad, incluyo los tipos más comunes y sus modos asociados -->
     <option value="ionian">Mayor (Ionian, maj)</option>
     <option value="dorian">Menor (Dorian, m7)</option>
     <option value="mixolydian">Dominante 7 (Mixolydian)</option>
@@ -55,7 +54,6 @@
     <option value="locrian">Semidisminuido (m7♭5, Locrian)</option>
     <option value="phrygian">Phrygian (uso ocasional)</option>
     <option value="aeolian">Menor natural (Aeolian)</option>
-    <!-- Puedes agregar más modos/escala alterada si quieres -->
   </select>
 
   <!-- Botón para aplicar/desactivar re-mapeo -->
@@ -68,20 +66,15 @@
     // ------------------------------------------
     // 1. Datos básicos: semitonos blancos y modos
     // ------------------------------------------
-
-    // Semitonos de las teclas blancas dentro de una octava (C=0, C#=1, D=2, ... B=11)
     const WHITE_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
-
-    // Intervalos (en semitonos) de cada modo, partiendo de la tónica (0):
     const SCALE_INTERVALS = {
-      ionian:      [0, 2, 4, 5, 7, 9, 11],   // Mayor (Escala jónica)
-      dorian:      [0, 2, 3, 5, 7, 9, 10],   // Dórico
-      mixolydian:  [0, 2, 4, 5, 7, 9, 10],   // Mixolidio
-      lydian:      [0, 2, 4, 6, 7, 9, 11],   // Lidio
-      locrian:     [0, 1, 3, 5, 6, 8, 10],   // Locrio
-      phrygian:    [0, 1, 3, 5, 7, 8, 10],   // Frigio
-      aeolian:     [0, 2, 3, 5, 7, 8, 10]    // Eolio (menor natural)
-      // Si quisieras una escala alterada podrías añadirla aquí
+      ionian:      [0, 2, 4, 5, 7, 9, 11],
+      dorian:      [0, 2, 3, 5, 7, 9, 10],
+      mixolydian:  [0, 2, 4, 5, 7, 9, 10],
+      lydian:      [0, 2, 4, 6, 7, 9, 11],
+      locrian:     [0, 1, 3, 5, 6, 8, 10],
+      phrygian:    [0, 1, 3, 5, 7, 8, 10],
+      aeolian:     [0, 2, 3, 5, 7, 8, 10]
     };
 
     // ------------------------------------------
@@ -92,29 +85,24 @@
     let chosenOutput = null;
     let isRemapOn = false;
 
-    const selInput  = document.getElementById('midi-in');
-    const selOutput = document.getElementById('midi-out');
-    const selRoot   = document.getElementById('root-select');
-    const selType   = document.getElementById('type-select');
-    const btnEnable = document.getElementById('enable-button');
-    const btnDisable= document.getElementById('disable-button');
-    const statusEl  = document.getElementById('status');
+    const selInput   = document.getElementById('midi-in');
+    const selOutput  = document.getElementById('midi-out');
+    const selRoot    = document.getElementById('root-select');
+    const selType    = document.getElementById('type-select');
+    const btnEnable  = document.getElementById('enable-button');
+    const btnDisable = document.getElementById('disable-button');
+    const statusEl   = document.getElementById('status');
 
-    // Mapa para recordar qué nota original disparó qué nota re-mapeada
-    // clave = noteNumber original; valor = noteNumber re-mapeada
     const activeNotesMap = new Map();
 
     // ------------------------------------------
-    // 3. Función para iniciar Web MIDI
+    // 3. Cargar Web MIDI y poblar listas
     // ------------------------------------------
     function onMIDISuccess(access) {
       midiAccess = access;
       statusEl.textContent = 'Estado: Web MIDI inicializado.';
 
-      // Llenar los <select> con dispositivos disponibles
       updateDeviceLists();
-
-      // Escuchar cambios en la lista de dispositivos (plug & unplug)
       midiAccess.onstatechange = updateDeviceLists;
     }
 
@@ -124,11 +112,9 @@
     }
 
     function updateDeviceLists() {
-      // Vaciar selects
       selInput.innerHTML  = '';
       selOutput.innerHTML = '';
 
-      // Agregar cada entrada
       midiAccess.inputs.forEach((port) => {
         const opt = document.createElement('option');
         opt.value = port.id;
@@ -136,7 +122,6 @@
         selInput.appendChild(opt);
       });
 
-      // Agregar cada salida
       midiAccess.outputs.forEach((port) => {
         const opt = document.createElement('option');
         opt.value = port.id;
@@ -144,7 +129,6 @@
         selOutput.appendChild(opt);
       });
 
-      // Si no hay nada, dejar mensaje
       if (selInput.children.length === 0) {
         const opt = document.createElement('option');
         opt.textContent = '— Sin entrada MIDI disponible —';
@@ -157,20 +141,26 @@
         opt.disabled = true;
         selOutput.appendChild(opt);
       }
+
+      // Si al actualizar hay al menos uno, lo asignamos como “elegido” por defecto:
+      if (!chosenInput && midiAccess.inputs.size > 0) {
+        const firstId = midiAccess.inputs.keys().next().value;
+        selInput.value = firstId;
+        chosenInput = midiAccess.inputs.get(firstId);
+      }
+      if (!chosenOutput && midiAccess.outputs.size > 0) {
+        const firstId = midiAccess.outputs.keys().next().value;
+        selOutput.value = firstId;
+        chosenOutput = midiAccess.outputs.get(firstId);
+      }
     }
 
     // ------------------------------------------
-    // 4. Detectar selección de puerto MIDI
+    // 4. Cuando el usuario cambia manualmente el select
     // ------------------------------------------
     selInput.addEventListener('change', () => {
-      // Cambiamos la entrada seleccionada
       const id = selInput.value;
-      if (chosenInput) {
-        chosenInput.onmidimessage = null;
-      }
       chosenInput = midiAccess.inputs.get(id) || null;
-
-      // Si el re-mapeo ya estaba activo, volvemos a conectar
       if (isRemapOn && chosenInput) {
         chosenInput.onmidimessage = handleMIDIMessage;
       }
@@ -182,21 +172,25 @@
     });
 
     // ------------------------------------------
-    // 5. Botones para habilitar/deshabilitar
+    // 5. Botones Habilitar/Deshabilitar re-mapeo
     // ------------------------------------------
     btnEnable.addEventListener('click', () => {
+      // En lugar de fiarnos de chosenInput/Output tal como vinieran,
+      // leemos siempre lo que haya seleccionado el usuario en ese momento:
+      const inputId  = selInput.value;
+      const outputId = selOutput.value;
+      chosenInput  = midiAccess.inputs.get(inputId)  || null;
+      chosenOutput = midiAccess.outputs.get(outputId) || null;
+
       if (!chosenInput || !chosenOutput) {
         alert('Por favor, selecciona simultáneamente una entrada y una salida MIDI.');
         return;
       }
-      // Desactivar Local Control del teclado (CC 122 = Local Control On/Off, 0 = Off)
-      // Esto hace que el teclado no suene internamente, solo envíe MIDI externo.
-      // Su canal por defecto es el 1 (0) a menos que tu dispositivo use otro canal.
+
+      // Desactivamos local control (CC122 = 0)
       chosenOutput.send([0xB0, 122, 0]);
 
-      // Limpiar mapa de notas activas
       activeNotesMap.clear();
-      // Conectar listener
       chosenInput.onmidimessage = handleMIDIMessage;
       isRemapOn = true;
       btnEnable.disabled  = true;
@@ -206,15 +200,16 @@
 
     btnDisable.addEventListener('click', () => {
       if (chosenInput) chosenInput.onmidimessage = null;
-      // Volver a activar Local Control (CC 122 = 127 → On)
-      if (chosenOutput) chosenOutput.send([0xB0, 122, 127]);
+      if (chosenOutput) {
+        // Reactivamos local control (CC122 = 127)
+        chosenOutput.send([0xB0, 122, 127]);
 
-      // Apagar cualquier nota pendiente
-      activeNotesMap.forEach((mappedNote, orig) => {
-        // Enviar note off para cada nota re-mapeada que quede en activo
-        chosenOutput.send([0x80 | 0, mappedNote, 0]);
-      });
-      activeNotesMap.clear();
+        // Apagar notas que pudieran quedar colgadas
+        activeNotesMap.forEach((mappedNote, orig) => {
+          chosenOutput.send([0x80, mappedNote, 0]);
+        });
+        activeNotesMap.clear();
+      }
 
       isRemapOn = false;
       btnEnable.disabled  = false;
@@ -223,90 +218,61 @@
     });
 
     // ------------------------------------------
-    // 6. Cálculo de la escala según acorde elegido
+    // 6. Cálculo de escala según acorde
     // ------------------------------------------
     function getScaleForChord() {
-      const rootPc = parseInt(selRoot.value);       // 0 = C, 1 = C#, etc.
-      const mode   = selType.value;                 // ‘ionian’, ‘dorian’, etc.
-      const intervals = SCALE_INTERVALS[mode];      // [0,2,4,5,7,9,11], etc.
-
-      // Generamos un array con los 7 “pitch classes” absolutas de la escala:
-      // scalePcs[i] = (rootPc + intervals[i]) % 12
-      const scalePcs = intervals.map(i => (rootPc + i) % 12);
-      return scalePcs;  // e.g. para G mixolydian, [7,9,11,0,2,4,5]
+      const rootPc = parseInt(selRoot.value);
+      const mode   = selType.value;
+      const intervals = SCALE_INTERVALS[mode];
+      return intervals.map(i => (rootPc + i) % 12);
     }
 
     // ------------------------------------------
-    // 7. Función de re-mapeo: tecla blanca → nota de escala
+    // 7. Mapeo nota entrante → nota de escala
     // ------------------------------------------
     function mapToScale(originalNoteNumber) {
-      // originalNoteNumber es 0..127
-      const pc = originalNoteNumber % 12;         // pitch class de la tecla presionada
+      const pc     = originalNoteNumber % 12;
       const octave = Math.floor(originalNoteNumber / 12);
       const scalePcs = getScaleForChord();
 
-      // 1) Determinar si ‘pc’ corresponde a una tecla blanca (C, D, E, F, G, A, B)
       const whiteIdx = WHITE_SEMITONES.indexOf(pc);
-      if (whiteIdx === -1) {
-        // No es blanca → devolvemos null para “ignorar”
-        return null;
-      }
+      if (whiteIdx === -1) return null;
 
-      // 2) Tomamos el pitch class de la escala en esa posición (whiteIdx)
-      const targetPc = scalePcs[whiteIdx];  // valor entre 0 y 11
-
-      // 3) Construir el número MIDI en la misma octava que la original:
-      //    notaRemap = targetPc + (octave * 12).
-      //    Si targetPc > pc, a veces quizá suene un semitono más alto en la misma octava.
-      //    Para simplificar, aquí forzamos queda en la MISMA octava que la original:  
+      const targetPc = scalePcs[whiteIdx];
       const mappedNote = targetPc + octave * 12;
-
-      // IMPORTANTE: si targetPc + (octave*12) cae fuera de [0..127], habría que ajustarlo.
       if (mappedNote < 0 || mappedNote > 127) return null;
       return mappedNote;
     }
 
     // ------------------------------------------
-    // 8. Handler de mensajes MIDI entrantes
+    // 8. Procesar mensajes MIDI entrantes
     // ------------------------------------------
     function handleMIDIMessage(event) {
       const [status, data1, data2] = event.data;
       const command = status & 0xF0;
       const channel = status & 0x0F;
 
-      // Solo re-mapear note on (0x90) y note off (0x80) del canal 0 (0 = canal 1), 
-      // aunque podrías adaptarlo para otros canales.
-      if (command === 0x90 && data2 > 0) {
-        // Note On
+      if (command === 0x90 && data2 > 0) { // Note On
         const origNote = data1;
         const velocity = data2;
         const remapped = mapToScale(origNote);
-
         if (remapped !== null) {
-          // Guardamos que origNote → remapped
           activeNotesMap.set(origNote, remapped);
-          // Enviamos Note On al dispositivo de salida
           chosenOutput.send([0x90 | channel, remapped, velocity]);
         }
-        // Si remapped === null (tecla negra), no hacemos nada (ignorar).
       }
       else if ((command === 0x80) || (command === 0x90 && data2 === 0)) {
-        // Note Off (o Note On con vel=0)
         const origNote = data1;
-        // Buscamos si teníamos almacenada una nota re-mapeada
         if (activeNotesMap.has(origNote)) {
           const remapped = activeNotesMap.get(origNote);
           chosenOutput.send([0x80 | channel, remapped, 0]);
           activeNotesMap.delete(origNote);
         }
-        // Si no existía en el Map (porque era negra o no estaba mapeada), nada que hacer.
       }
-      // Podrías añadir aquí más lógica (p. ej. pasar a través mensajes de CC),
-      // pero la idea principal es re-mapear nota blanca → nota de escala.
     }
 
     // ------------------------------------------
-    // 9. Inicializar todo
+    // 9. Inicializar Web MIDI
     // ------------------------------------------
     if (navigator.requestMIDIAccess) {
       navigator.requestMIDIAccess({ sysex: false })
