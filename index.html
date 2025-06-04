@@ -105,15 +105,32 @@
       <option value="11">B</option>
     </select>
 
-    <label for="type-select">Tipo de acorde:</label>
+    <label for="type-select">Tipo de acorde / escala:</label>
     <select id="type-select">
-      <option value="ionian">Mayor (Ionian, maj)</option>
-      <option value="dorian">Menor (Dorian, m7)</option>
-      <option value="mixolydian">Dominante 7 (Mixolydian)</option>
-      <option value="lydian">Mayor #11 (Lydian)</option>
-      <option value="locrian">Semidisminuido (m7♭5, Locrian)</option>
-      <option value="phrygian">Phrygian (uso ocasional)</option>
+      <!-- Modos diatónicos básicos -->
+      <option value="ionian">Mayor (Ionian)</option>
+      <option value="dorian">Menor (Dorian)</option>
+      <option value="phrygian">Phrygian</option>
+      <option value="lydian">Lydian (#11)</option>
+      <option value="mixolydian">Mixolydian (Dominante 7)</option>
       <option value="aeolian">Menor natural (Aeolian)</option>
+      <option value="locrian">Locrian (m7♭5)</option>
+
+      <!-- Escalas menores melódicas y armónicas (modos) -->
+      <option value="melodicMinor">Melódica Ascendente (Melodic Minor)</option>
+      <option value="harmonicMinor">Menor Armónica (Harmonic Minor)</option>
+
+      <!-- Escala alterada / superlocria -->
+      <option value="altered">Alterada (Superlocrio)</option>
+
+      <!-- Escalas disminuidas -->
+      <option value="diminished_whole_half">Disminuida (Whole–Half)</option>
+      <option value="diminished_half_whole">Disminuida (Half–Whole)</option>
+
+      <!-- Escalas pentatónicas y blues -->
+      <option value="pentatonicMajor">Pentatónica Mayor</option>
+      <option value="pentatonicMinor">Pentatónica Menor</option>
+      <option value="blues">Escala Blues</option>
     </select>
 
     <!-- Botones para habilitar/deshabilitar re-mapeo -->
@@ -128,14 +145,35 @@
     // 1. Datos básicos: semitonos blancos y modos
     // ------------------------------------------
     const WHITE_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
+
+    // Intervalos (en semitonos) de cada escala/modo
     const SCALE_INTERVALS = {
-      ionian:      [0, 2, 4, 5, 7, 9, 11],
-      dorian:      [0, 2, 3, 5, 7, 9, 10],
-      mixolydian:  [0, 2, 4, 5, 7, 9, 10],
-      lydian:      [0, 2, 4, 6, 7, 9, 11],
-      locrian:     [0, 1, 3, 5, 6, 8, 10],
-      phrygian:    [0, 1, 3, 5, 7, 8, 10],
-      aeolian:     [0, 2, 3, 5, 7, 8, 10]
+      // Modos diatónicos
+      ionian:      [0, 2, 4, 5, 7, 9, 11],   // Escala mayor
+      dorian:      [0, 2, 3, 5, 7, 9, 10],   // Modo dórico
+      phrygian:    [0, 1, 3, 5, 7, 8, 10],   // Frigio
+      lydian:      [0, 2, 4, 6, 7, 9, 11],   // Lidio (#11)
+      mixolydian:  [0, 2, 4, 5, 7, 9, 10],   // Mixolidio (7)
+      aeolian:     [0, 2, 3, 5, 7, 8, 10],   // Eolio (menor natural)
+      locrian:     [0, 1, 3, 5, 6, 8, 10],   // Locrio (m7♭5)
+
+      // Escalas menores modernas
+      melodicMinor:    [0, 2, 3, 5, 7, 9, 11],   // Menor melódica ascendente
+      harmonicMinor:   [0, 2, 3, 5, 7, 8, 11],    // Menor armónica
+
+      // Escala alterada (Superlocrio, modo 7 de menor melódica)
+      altered:     [0, 1, 3, 4, 6, 8, 10],   // b9, #9, #11, b13
+
+      // Escalas disminuidas
+      // Whole–Half diminished: 8 sonidos, vamos a tomar sólo 7 posiciones (las blancas)
+      diminished_whole_half: [0, 2, 3, 5, 6, 8, 9, 11], // 8 tonos; en la práctica mapeamos 7 blancas
+      // Half–Whole diminished: 8 sonidos
+      diminished_half_whole: [0, 1, 3, 4, 6, 7, 9, 10],
+
+      // Pentatónicas y Blues (5 o 6 notas)
+      pentatonicMajor: [0, 2, 4, 7, 9],  // C D E G A
+      pentatonicMinor: [0, 3, 5, 7, 10], // C Eb F G Bb
+      blues:           [0, 3, 5, 6, 7, 10] // C Eb F F# G Bb (6 notas)
     };
 
     // ------------------------------------------
@@ -283,7 +321,11 @@
     function getScaleForChord() {
       const rootPc = parseInt(selRoot.value);
       const mode   = selType.value;
-      const intervals = SCALE_INTERVALS[mode];
+      const intervals = SCALE_INTERVALS[mode] || [];
+      // En el caso de las escalas de 8 notas (disminuidas), 
+      // usaremos solo las primeras 7 posiciones (teclas blancas).
+      // Para pentatónicas/blues, también tendremos menos de 7,
+      // y las teclas “blancas extra” se ignorarán en mapToScale().
       return intervals.map(i => (rootPc + i) % 12);
     }
 
@@ -297,6 +339,10 @@
 
       const whiteIdx = WHITE_SEMITONES.indexOf(pc);
       if (whiteIdx === -1) return null;
+
+      // Si scalePcs tiene menos de 7 elementos (pentatónica o blues),
+      // ignoramos índices que excedan su longitud.
+      if (whiteIdx >= scalePcs.length) return null;
 
       const targetPc = scalePcs[whiteIdx];
       const mappedNote = targetPc + octave * 12;
