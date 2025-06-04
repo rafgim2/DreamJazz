@@ -20,23 +20,25 @@
     .container {
       border: 5px solid #FFD700; /* marco amarillo */
       border-radius: 15px;
-      padding: 20px 30px;
-      background-color: #ffffff; /* fondo blanco dentro del marco */
+      padding: 10px 15px;              /* padding reducido */
+      background-color: #ffffff;       /* fondo blanco dentro del marco */
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       text-align: center;
       max-width: 400px;
       width: 100%;
+      max-height: 90vh;                /* que no supere el 90 % de la altura de la ventana */
+      overflow-y: auto;                /* si algo desborda, permite scroll interno */
     }
 
     h1 {
-      margin-top: 0;
-      font-size: 2em;
+      margin: 5px 0;
+      font-size: 1.8em;
       color: #333;
     }
 
     .byline {
-      margin-bottom: 20px;
-      font-size: 0.9em;
+      margin-bottom: 10px;
+      font-size: 0.85em;
     }
 
     .byline a {
@@ -49,18 +51,18 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 5px;
-      margin-bottom: 15px;
+      gap: 4px;            /* gap reducido */
+      margin-bottom: 10px; /* margen inferior reducido */
     }
 
     .button-group button {
-      flex: 1 1 30%;
-      min-width: 60px;
-      padding: 8px;
+      flex: 1 1 20%;       /* basis reducido para que quepan más en cada fila */
+      min-width: 50px;     /* ancho mínimo */
+      padding: 4px 6px;    /* padding reducido */
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 4px;  /* radio de borde reducido */
       background-color: #fafafa;
-      font-size: 0.9em;
+      font-size: 0.8em;    /* letra más pequeña */
       cursor: pointer;
     }
 
@@ -72,18 +74,20 @@
 
     label {
       font-weight: bold;
-      margin-top: 10px;
-      font-size: 1em;
+      margin: 8px 0 4px 0;  /* márgenes reducidos */
+      font-size: 0.95em;
+      display: block;
     }
 
-    select, button.standard {
-      margin: 8px 0;
+    select,
+    button.standard {
+      margin: 4px 0;          /* márgenes verticales reducidos */
       display: block;
       width: 100%;
-      font-size: 1em;
-      padding: 8px;
+      font-size: 0.9em;       /* letra un poco más pequeña */
+      padding: 6px;           /* padding reducido */
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 4px;     /* radio reducido */
       background-color: #fafafa;
       cursor: pointer;
     }
@@ -94,9 +98,9 @@
     }
 
     #status {
-      margin-top: 12px;
+      margin-top: 8px;
       color: green;
-      font-size: 0.9em;
+      font-size: 0.85em;
     }
   </style>
 </head>
