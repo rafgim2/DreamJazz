@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DreamJazz</title>
   <style>
     /* Fondo de la página en azul pastel claro */
@@ -31,31 +30,17 @@
       overflow-y: auto;                /* si algo desborda, permite scroll interno */
     }
 
-    h1 {
-      margin: 5px 0;
-      font-size: 1.8em;
-      color: #333;
-    }
+    h1 { margin: -3px 0; font-size: 1.8em; color: #333; }
+    .byline { margin-bottom: 10px; font-size: 0.65em; }
+    .byline a { color: #333; text-decoration: none; }
 
-    .byline {
-      margin-bottom: 10px;
-      font-size: 0.85em;
-    }
-
-    .byline a {
-      color: #333;
-      text-decoration: none;
-    }
-
-    /* Estilo para las agrupaciones de botones */
     .button-group {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 4px;            /* gap reducido */
-      margin-bottom: 10px; /* margen inferior reducido */
+      gap: 4px;
+      margin-bottom: 10px;
     }
-
     .button-group button {
       flex: 1 1 20%;       /* basis reducido para que quepan más en cada fila */
       min-width: 50px;     /* ancho mínimo */
@@ -66,22 +51,14 @@
       font-size: 0.8em;    /* letra más pequeña */
       cursor: pointer;
     }
-
     .button-group button.selected {
       background-color: #FFD700;
       color: #fff;
       border-color: #e5c100;
     }
 
-    label {
-      font-weight: bold;
-      margin: 8px 0 4px 0;  /* márgenes reducidos */
-      font-size: 0.95em;
-      display: block;
-    }
-
-    select,
-    button.standard {
+    label { font-weight: bold; margin: 8px 0 4px 0; font-size: 0.95em; display: block; }
+    select, button.standard {
       margin: 4px 0;          /* márgenes verticales reducidos */
       display: block;
       width: 100%;
@@ -92,17 +69,9 @@
       background-color: #fafafa;
       cursor: pointer;
     }
+    button.standard:disabled { background-color: #e0e0e0; cursor: not-allowed; }
 
-    button.standard:disabled {
-      background-color: #e0e0e0;
-      cursor: not-allowed;
-    }
-
-    #status {
-      margin-top: 8px;
-      color: green;
-      font-size: 0.85em;
-    }
+    #status { margin-top: 8px; color: green; font-size: 0.85em; }
   </style>
 </head>
 <body>
@@ -132,51 +101,37 @@
     <!-- Selección táctil de tipo de acorde / escala -->
     <label>Tipo de acorde / escala:</label>
     <div id="type-buttons" class="button-group">
-      <!-- Modos diatónicos -->
-      <button data-type="ionian">Ionian</button>
-      <button data-type="dorian">Dorian</button>
-      <button data-type="phrygian">Phrygian</button>
-      <button data-type="lydian">Lydian</button>
-      <button data-type="mixolydian">Mixolydian</button>
-      <button data-type="aeolian">Aeolian</button>
-      <button data-type="locrian">Locrian</button>
-      <!-- Menores modernas -->
-      <button data-type="melodicMinor">Melódica</button>
-      <button data-type="harmonicMinor">Armónica</button>
-      <!-- Escala alterada -->
-      <button data-type="altered">Alterada</button>
-      <!-- Disminuidas -->
-      <button data-type="diminished_whole_half">Dim WH</button>
-      <button data-type="diminished_half_whole">Dim HW</button>
-      <!-- Pentatónicas y Blues -->
+      <button data-type="ionian">Maj7 (Ionian)</button>
+      <button data-type="dorian">m7 (Dorian)</button>
+      <button data-type="mixolydian">7 (Mixolydian)</button>
+      <button data-type="lydian">Maj7#11 (Lydian)</button>
+      <button data-type="locrian">m7♭5 (Locrian)</button>
+      <button data-type="aeolian">m (Aeolian)</button>
+      <button data-type="melodicMinor">mMaj7 (Melodic m)</button>
+      <button data-type="harmonicMinor">m(maj7)♭5 (Harmonic m)</button>
+      <button data-type="altered">7alt (Altered)</button>
+      <button data-type="diminished_whole_half">dim7 WH</button>
+      <button data-type="diminished_half_whole">dim7 HW</button>
       <button data-type="pentatonicMajor">Pent. May</button>
       <button data-type="pentatonicMinor">Pent. Men</button>
       <button data-type="blues">Blues</button>
     </div>
 
-    <!-- Select para elegir entrada y salida MIDI -->
+    <!-- MIDI I/O -->
     <label for="midi-in">Entrada MIDI:</label>
     <select id="midi-in"></select>
-
     <label for="midi-out">Salida MIDI:</label>
     <select id="midi-out"></select>
 
-    <!-- Botones para habilitar/deshabilitar re-mapeo -->
+    <!-- Botones re-mapeo -->
     <button id="enable-button" class="standard">Habilitar re-mapeo</button>
     <button id="disable-button" class="standard" disabled>Desactivar re-mapeo</button>
-
     <div id="status">Estado: esperando conexión MIDI…</div>
   </div>
 
   <script>
-    // ------------------------------------------
-    // 1. Datos básicos: semitonos blancos y modos
-    // ------------------------------------------
     const WHITE_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
-
-    // Intervalos (en semitonos) de cada escala/modo
     const SCALE_INTERVALS = {
-      // Modos diatónicos
       ionian:      [0, 2, 4, 5, 7, 9, 11],
       dorian:      [0, 2, 3, 5, 7, 9, 10],
       phrygian:    [0, 1, 3, 5, 7, 8, 10],
@@ -184,283 +139,175 @@
       mixolydian:  [0, 2, 4, 5, 7, 9, 10],
       aeolian:     [0, 2, 3, 5, 7, 8, 10],
       locrian:     [0, 1, 3, 5, 6, 8, 10],
-
-      // Escalas menores modernas
-      melodicMinor:    [0, 2, 3, 5, 7, 9, 11],
-      harmonicMinor:   [0, 2, 3, 5, 7, 8, 11],
-
-      // Escala alterada (Superlocrio)
+      melodicMinor:[0, 2, 3, 5, 7, 9, 11],
+      harmonicMinor:[0, 2, 3, 5, 7, 8, 11],
       altered:     [0, 1, 3, 4, 6, 8, 10],
-
-      // Escalas disminuidas (8 notas, se usan las primeras 7)
       diminished_whole_half: [0, 2, 3, 5, 6, 8, 9, 11],
       diminished_half_whole: [0, 1, 3, 4, 6, 7, 9, 10],
-
-      // Pentatónicas y Blues
       pentatonicMajor: [0, 2, 4, 7, 9],
       pentatonicMinor: [0, 3, 5, 7, 10],
       blues:           [0, 3, 5, 6, 7, 10]
     };
 
-    // ------------------------------------------
-    // 2. Variables de estado y referencias DOM
-    // ------------------------------------------
     let midiAccess = null;
     let chosenInput = null;
     let chosenOutput = null;
     let isRemapOn = false;
-
-    let currentRoot = 0;      // valor de 0 a 11
+    let currentRoot = 0;
     let currentType = 'ionian';
 
     const rootButtons = document.querySelectorAll('#root-buttons button');
     const typeButtons = document.querySelectorAll('#type-buttons button');
-    const selInput     = document.getElementById('midi-in');
-    const selOutput    = document.getElementById('midi-out');
-    const btnEnable    = document.getElementById('enable-button');
-    const btnDisable   = document.getElementById('disable-button');
-    const statusEl     = document.getElementById('status');
-
+    const selInput    = document.getElementById('midi-in');
+    const selOutput   = document.getElementById('midi-out');
+    const btnEnable   = document.getElementById('enable-button');
+    const btnDisable  = document.getElementById('disable-button');
+    const statusEl    = document.getElementById('status');
     const activeNotesMap = new Map();
 
-    // ------------------------------------------
-    // 3. Funciones para gestionar selección táctil
-    // ------------------------------------------
     function selectRoot(value) {
       currentRoot = value;
-      rootButtons.forEach(btn => {
-        btn.classList.toggle('selected', parseInt(btn.dataset.root) === value);
-      });
+      rootButtons.forEach(btn => btn.classList.toggle('selected', parseInt(btn.dataset.root) === value));
     }
-
     function selectType(value) {
       currentType = value;
-      typeButtons.forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.type === value);
-      });
+      typeButtons.forEach(btn => btn.classList.toggle('selected', btn.dataset.type === value));
     }
+    selectRoot(0); selectType('ionian');
+    rootButtons.forEach(btn => btn.addEventListener('click', () => selectRoot(parseInt(btn.dataset.root))));
+    typeButtons.forEach(btn => btn.addEventListener('click', () => selectType(btn.dataset.type)));
 
-    // Inicializar estados por defecto (C / Ionian)
-    selectRoot(0);
-    selectType('ionian');
-
-    // Añadir listeners a cada botón de raíz
-    rootButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        selectRoot(parseInt(btn.dataset.root));
-      });
-    });
-
-    // Añadir listeners a cada botón de tipo
-    typeButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        selectType(btn.dataset.type);
-      });
-    });
-
-    // ------------------------------------------
-    // 4. Cargar Web MIDI y poblar listas
-    // ------------------------------------------
     function onMIDISuccess(access) {
       midiAccess = access;
       statusEl.textContent = 'Estado: Web MIDI inicializado.';
-
       updateDeviceLists();
       midiAccess.onstatechange = updateDeviceLists;
     }
-
     function onMIDIFailure(err) {
       statusEl.textContent = 'ERROR: No se pudo acceder a Web MIDI — ' + err;
       statusEl.style.color = 'red';
     }
-
     function updateDeviceLists() {
-      selInput.innerHTML  = '';
+      selInput.innerHTML = '';
       selOutput.innerHTML = '';
-
-      midiAccess.inputs.forEach((port) => {
-        const opt = document.createElement('option');
-        opt.value = port.id;
+      midiAccess.inputs.forEach(port => {
+        const opt = document.createElement('option'); opt.value = port.id;
         opt.textContent = port.name + ' [' + port.manufacturer + ']';
         selInput.appendChild(opt);
       });
-
-      midiAccess.outputs.forEach((port) => {
-        const opt = document.createElement('option');
-        opt.value = port.id;
+      midiAccess.outputs.forEach(port => {
+        const opt = document.createElement('option'); opt.value = port.id;
         opt.textContent = port.name + ' [' + port.manufacturer + ']';
         selOutput.appendChild(opt);
       });
-
-      if (selInput.children.length === 0) {
-        const opt = document.createElement('option');
-        opt.textContent = '— Sin entrada MIDI disponible —';
-        opt.disabled = true;
-        selInput.appendChild(opt);
-      }
-      if (selOutput.children.length === 0) {
-        const opt = document.createElement('option');
-        opt.textContent = '— Sin salida MIDI disponible —';
-        opt.disabled = true;
-        selOutput.appendChild(opt);
-      }
-
-      // Si aún no hemos asignado uno y hay al menos uno, asignamos el primero
       if (!chosenInput && midiAccess.inputs.size > 0) {
-        const firstId = midiAccess.inputs.keys().next().value;
-        selInput.value = firstId;
-        chosenInput = midiAccess.inputs.get(firstId);
+        const id = midiAccess.inputs.keys().next().value;
+        selInput.value = id; chosenInput = midiAccess.inputs.get(id);
       }
       if (!chosenOutput && midiAccess.outputs.size > 0) {
-        const firstId = midiAccess.outputs.keys().next().value;
-        selOutput.value = firstId;
-        chosenOutput = midiAccess.outputs.get(firstId);
+        const id = midiAccess.outputs.keys().next().value;
+        selOutput.value = id; chosenOutput = midiAccess.outputs.get(id);
       }
     }
-
-    // ------------------------------------------
-    // 5. Cambio manual en selects MIDI
-    // ------------------------------------------
     selInput.addEventListener('change', () => {
-      const id = selInput.value;
-      chosenInput = midiAccess.inputs.get(id) || null;
-      if (isRemapOn && chosenInput) {
-        chosenInput.onmidimessage = handleMIDIMessage;
-      }
+      chosenInput = midiAccess.inputs.get(selInput.value);
+      if (isRemapOn) chosenInput.onmidimessage = handleMIDIMessage;
     });
-
     selOutput.addEventListener('change', () => {
-      const id = selOutput.value;
-      chosenOutput = midiAccess.outputs.get(id) || null;
+      chosenOutput = midiAccess.outputs.get(selOutput.value);
     });
 
-    // ------------------------------------------
-    // 6. Botones Habilitar/Deshabilitar re-mapeo
-    // ------------------------------------------
     btnEnable.addEventListener('click', () => {
-      // Leemos nuevamente lo seleccionado en ese momento
-      const inputId  = selInput.value;
-      const outputId = selOutput.value;
-      chosenInput  = midiAccess.inputs.get(inputId)  || null;
-      chosenOutput = midiAccess.outputs.get(outputId) || null;
-
-      if (!chosenInput || !chosenOutput) {
-        alert('Por favor, selecciona simultáneamente una entrada y una salida MIDI.');
-        return;
-      }
-
-      // Desactivar Local Control (CC 122 = 0)
-      chosenOutput.send([0xB0, 122, 0]);
-
+      chosenInput = midiAccess.inputs.get(selInput.value);
+      chosenOutput = midiAccess.outputs.get(selOutput.value);
+      if (!chosenInput || !chosenOutput) return alert('Selecciona entrada y salida.');
+      chosenOutput.send([0xB0,122,0]);
       activeNotesMap.clear();
       chosenInput.onmidimessage = handleMIDIMessage;
-      isRemapOn = true;
-      btnEnable.disabled  = true;
-      btnDisable.disabled = false;
-      statusEl.textContent = 'Estado: Re-mapeo activo. Toca las teclas blancas.';
+      isRemapOn=true; btnEnable.disabled=true; btnDisable.disabled=false;
+      statusEl.textContent='Estado: Re-mapeo activo.';
     });
-
     btnDisable.addEventListener('click', () => {
-      if (chosenInput) chosenInput.onmidimessage = null;
+      if (chosenInput) chosenInput.onmidimessage=null;
       if (chosenOutput) {
-        // Reactivar Local Control (CC 122 = 127)
-        chosenOutput.send([0xB0, 122, 127]);
-
-        // Apagar notas que pudieran quedar colgadas
-        activeNotesMap.forEach((mappedNote) => {
-          chosenOutput.send([0x80, mappedNote, 0]);
-        });
+        chosenOutput.send([0xB0,122,127]);
+        activeNotesMap.forEach(n => chosenOutput.send([0x80,n,0]));
         activeNotesMap.clear();
       }
-
-      isRemapOn = false;
-      btnEnable.disabled  = false;
-      btnDisable.disabled = true;
-      statusEl.textContent = 'Estado: Re-mapeo desactivado.';
+      isRemapOn=false; btnEnable.disabled=false; btnDisable.disabled=true;
+      statusEl.textContent='Estado: re-mapeo desactivado.';
     });
 
-    // ------------------------------------------
-    // 7. Cálculo de escala según acorde
-    // ------------------------------------------
     function getScaleForChord() {
-      const rootPc = currentRoot;
-      const mode   = currentType;
-      const intervals = SCALE_INTERVALS[mode] || [];
-      return intervals.map(i => (rootPc + i) % 12);
+      const intervals = SCALE_INTERVALS[currentType]||[];
+      return intervals.map(i => (currentRoot+i)%12);
     }
-
     // ------------------------------------------
-    // 8. Mapeo nota entrante → nota de escala ajustado
-    //     para que repita notas en pentatónicas/blues
-    // ------------------------------------------
-    function mapToScale(originalNoteNumber) {
-      const pc     = originalNoteNumber % 12;
-      const octave = Math.floor(originalNoteNumber / 12);
-      const scalePcs = getScaleForChord();
+// Mapeo nota entrante → nota de escala
+//    para blancas, y negras → tecla negra más cercana
+// ------------------------------------------
+function mapToScale(originalNoteNumber) {
+  const pc     = originalNoteNumber % 12;
+  const octave = Math.floor(originalNoteNumber / 12);
+  const scalePcs = getScaleForChord();
 
-      const whiteIdx = WHITE_SEMITONES.indexOf(pc);
-      if (whiteIdx === -1) return null;
+  // 1) Si es blanca, mapeamos a la escala como antes:
+  const whiteIdx = WHITE_SEMITONES.indexOf(pc);
+  if (whiteIdx !== -1) {
+    const idx      = whiteIdx % scalePcs.length;
+    const targetPc = scalePcs[idx];
+    // candidatos en octava -1, 0 y +1
+    const candidates = [
+      targetPc + (octave - 1) * 12,
+      targetPc + octave       * 12,
+      targetPc + (octave + 1) * 12
+    ].filter(n => n >= 0 && n <= 127);
+    // elegimos el más cercano
+    return candidates.reduce((a, b) =>
+      Math.abs(b - originalNoteNumber) < Math.abs(a - originalNoteNumber) ? b : a
+    );
+  }
 
-      // En lugar de descartar, envolvemos el índice:
-      const idx = whiteIdx % scalePcs.length;
-      const targetPc = scalePcs[idx];
+  // 2) Si es negra (no está en WHITE_SEMITONES), la empujamos
+  //    a la tecla negra más cercana:
+  const BLACK_SEMITONES = [1, 3, 6, 8, 10];
+  if (BLACK_SEMITONES.indexOf(pc) !== -1) {
+    // para cada semitono negro, generamos candidatos en octavas adyacentes
+    let best = null;
+    BLACK_SEMITONES.forEach(blackPc => {
+      [octave - 1, octave, octave + 1].forEach(oct => {
+        const n = blackPc + oct * 12;
+        if (n >= 0 && n <= 127) {
+          if (best === null ||
+              Math.abs(n - originalNoteNumber) < Math.abs(best - originalNoteNumber)) {
+            best = n;
+          }
+        }
+      });
+    });
+    return best;
+  }
 
-      // Intentamos en la misma octava; si queda por debajo, subimos una octava:
-      let mapped = targetPc + octave * 12;
-      if (mapped < originalNoteNumber) {
-        mapped += 12;
-      }
-      if (mapped < 0 || mapped > 127) return null;
-      return mapped;
-    }
+  // 3) En cualquier otro caso (fuera de rango), descartamos
+  return null;
+}
 
-    // ------------------------------------------
-    // 9. Procesar mensajes MIDI entrantes (incluye pedal)
-    // ------------------------------------------
-    function handleMIDIMessage(event) {
-      const [status, data1, data2] = event.data;
-      const command = status & 0xF0;
-      const channel = status & 0x0F;
-
-      // 1) Pasar todos los mensajes de Control Change (CC), incluido el pedal (CC 64)
-      if (command === 0xB0) {
-        chosenOutput.send(event.data);
-        return;
-      }
-
-      // 2) Note On (0x90) y Note Off (0x80)
-      if (command === 0x90 && data2 > 0) {
-        // Note On
-        const origNote = data1;
-        const velocity = data2;
-        const remapped = mapToScale(origNote);
-        if (remapped !== null) {
-          activeNotesMap.set(origNote, remapped);
-          chosenOutput.send([0x90 | channel, remapped, velocity]);
+    function handleMIDIMessage(e){
+      const [st,n,v]=e.data, cmd=st&0xF0;
+      if(cmd===0xB0){chosenOutput.send(e.data);return;}
+      if(cmd===0x90&&v>0){
+        const r=mapToScale(n);
+        if(r!==null){activeNotesMap.set(n,r);chosenOutput.send([0x90| (st&0x0F),r,v]);}
+      } else if(cmd===0x80||(cmd===0x90&&v===0)){
+        if(activeNotesMap.has(n)){
+          const r=activeNotesMap.get(n);
+          chosenOutput.send([0x80| (st&0x0F),r,0]);activeNotesMap.delete(n);
         }
       }
-      else if (command === 0x80 || (command === 0x90 && data2 === 0)) {
-        // Note Off (o Note On con vel=0)
-        const origNote = data1;
-        if (activeNotesMap.has(origNote)) {
-          const remapped = activeNotesMap.get(origNote);
-          chosenOutput.send([0x80 | channel, remapped, 0]);
-          activeNotesMap.delete(origNote);
-        }
-      }
-      // Otros mensajes MIDI se pueden ignorar o agregar según necesidad
     }
 
-    // ------------------------------------------
-    // 10. Inicializar Web MIDI
-    // ------------------------------------------
-    if (navigator.requestMIDIAccess) {
-      navigator.requestMIDIAccess({ sysex: false })
-        .then(onMIDISuccess, onMIDIFailure);
-    } else {
-      statusEl.textContent = 'ERROR: Tu navegador no soporta Web MIDI.';
-      statusEl.style.color = 'red';
-    }
+    if(navigator.requestMIDIAccess) navigator.requestMIDIAccess({sysex:false}).then(onMIDISuccess,onMIDIFailure);
+    else{statusEl.textContent='ERROR: Tu navegador no soporta Web MIDI.';statusEl.style.color='red';}
   </script>
 </body>
 </html>
