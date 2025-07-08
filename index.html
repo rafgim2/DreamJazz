@@ -5,40 +5,72 @@
   <title>DreamJazz</title>
   <style>
     body {
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       background-color: #B3E5FC;
-      display: flex; justify-content: center; align-items: center;
-      height: 100vh; font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
     }
     .container {
-      border: 5px solid #FFD700; border-radius: 15px;
-      padding: 10px 15px; background-color: #fff;
+      border: 5px solid #FFD700;
+      border-radius: 15px;
+      padding: 10px 15px;
+      background-color: #fff;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center; max-width: 400px;
-      width: 100%; max-height: 90vh; overflow-y: auto;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     h1 { margin: -3px 0; font-size: 1.8em; color: #333; }
     .byline { margin-bottom: 10px; font-size: 0.65em; }
     .byline a { color: #333; text-decoration: none; }
-    .button-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-bottom: 10px; }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
     .button-group button {
-      flex: 1 1 20%; min-width: 50px; padding: 4px 6px;
-      border: 1px solid #ccc; border-radius: 4px;
-      background-color: #fafafa; font-size: 0.8em; cursor: pointer;
+      flex: 1 1 20%;
+      min-width: 50px;
+      padding: 4px 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #fafafa;
+      font-size: 0.8em;
+      cursor: pointer;
     }
     .button-group button.selected {
-      background-color: #FFD700; color: #fff; border-color: #e5c100;
+      background-color: #FFD700;
+      color: #fff;
+      border-color: #e5c100;
     }
-    label { font-weight: bold; margin: 8px 0 4px; font-size: 0.95em; display: block; }
+
+    label { font-weight: bold; margin: 8px 0 4px; display: block; font-size: 0.95em; }
     select, button.standard {
-      margin: 4px 0; display: block; width: 100%;
-      font-size: 0.9em; padding: 6px; border: 1px solid #ccc;
-      border-radius: 4px; background-color: #fafafa; cursor: pointer;
+      margin: 4px 0;
+      display: block;
+      width: 100%;
+      font-size: 0.9em;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #fafafa;
+      cursor: pointer;
     }
     button.standard:disabled { background-color: #e0e0e0; cursor: not-allowed; }
+
     #status { margin-top: 8px; color: green; font-size: 0.85em; }
+
     #chord-seq li { text-align: left; margin: 2px 0; }
-    #current-chord { font-size: 1.1em; color: #333; margin: 6px 0; }
+    #current-chord { font-size: 1.1em; color: #333; }
     hr { margin: 15px 0; border: none; border-top: 1px solid #ccc; }
   </style>
 </head>
@@ -49,7 +81,6 @@
       <a href="https://www.youtube.com/@rafgim" target="_blank">© By Rafael Gimeno</a>
     </div>
 
-    <!-- Selección de raíz y tipo -->
     <label>Raíz del acorde:</label>
     <div id="root-buttons" class="button-group">
       <button data-root="0">C</button><button data-root="1">C♯/D♭</button>
@@ -59,17 +90,18 @@
       <button data-root="8">G♯/A♭</button><button data-root="9">A</button>
       <button data-root="10">A♯/B♭</button><button data-root="11">B</button>
     </div>
+
     <label>Tipo de acorde / escala:</label>
     <div id="type-buttons" class="button-group">
-      <button data-type="ionian">Maj7</button>
-      <button data-type="dorian">m7</button>
-      <button data-type="mixolydian">7</button>
-      <button data-type="lydian">Maj7#11</button>
-      <button data-type="locrian">m7♭5</button>
-      <button data-type="aeolian">m</button>
-      <button data-type="melodicMinor">mMaj7</button>
-      <button data-type="harmonicMinor">m(maj7)♭5</button>
-      <button data-type="altered">7alt</button>
+      <button data-type="ionian">Maj7 (Ionian)</button>
+      <button data-type="dorian">m7 (Dorian)</button>
+      <button data-type="mixolydian">7 (Mixolydian)</button>
+      <button data-type="lydian">Maj7#11 (Lydian)</button>
+      <button data-type="locrian">m7♭5 (Locrian)</button>
+      <button data-type="aeolian">m (Aeolian)</button>
+      <button data-type="melodicMinor">mMaj7 (Melodic m)</button>
+      <button data-type="harmonicMinor">m(maj7)♭5 (Harmonic m)</button>
+      <button data-type="altered">7alt (Altered)</button>
       <button data-type="diminished_whole_half">dim7 WH</button>
       <button data-type="diminished_half_whole">dim7 HW</button>
       <button data-type="pentatonicMajor">Pent. May</button>
@@ -77,35 +109,31 @@
       <button data-type="blues">Blues</button>
     </div>
 
-    <!-- Generación y control de secuencia -->
     <hr>
-    <label>Secuencia de acordes aleatoria (4 acordes):</label>
+    <label>Secuencia de acordes aleatoria:</label>
     <button id="generate-seq" class="standard">Generar secuencia</button>
     <ol id="chord-seq"></ol>
     <label for="chord-duration">Duración de cada acorde (s):</label>
     <select id="chord-duration">
-      <option value="4">4</option><option value="5">5</option>
-      <option value="6">6</option><option value="7">7</option>
-      <option value="8">8</option><option value="9">9</option>
-      <option value="10">10</option>
+      <option>4</option><option>5</option><option>6</option>
+      <option>7</option><option>8</option><option>9</option><option>10</option>
     </select>
     <button id="start-seq" class="standard" disabled>Iniciar secuencia</button>
     <button id="stop-seq" class="standard" disabled>Detener secuencia</button>
     <div id="current-chord"></div>
     <hr>
 
-    <!-- MIDI I/O -->
     <label for="midi-in">Entrada MIDI:</label>
     <select id="midi-in"></select>
     <label for="midi-out">Salida MIDI:</label>
     <select id="midi-out"></select>
+
     <button id="enable-button" class="standard">Habilitar re-mapeo</button>
     <button id="disable-button" class="standard" disabled>Desactivar re-mapeo</button>
     <div id="status">Estado: esperando conexión MIDI…</div>
   </div>
 
   <script>
-    // Configuración básica
     const WHITE_SEMITONES = [0,2,4,5,7,9,11];
     const SCALE_INTERVALS = {
       ionian:[0,2,4,5,7,9,11], dorian:[0,2,3,5,7,9,10],
@@ -113,241 +141,205 @@
       mixolydian:[0,2,4,5,7,9,10], aeolian:[0,2,3,5,7,8,10],
       locrian:[0,1,3,5,6,8,10], melodicMinor:[0,2,3,5,7,9,11],
       harmonicMinor:[0,2,3,5,7,8,11], altered:[0,1,3,4,6,8,10],
-      diminished_whole_half:[0,2,3,5,6,8,9,11], diminished_half_whole:[0,1,3,4,6,7,9,10],
+      diminished_whole_half:[0,2,3,5,6,8,9,11],
+      diminished_half_whole:[0,1,3,4,6,7,9,10],
       pentatonicMajor:[0,2,4,7,9], pentatonicMinor:[0,3,5,7,10],
       blues:[0,3,5,6,7,10]
     };
-
-    // Progresiones comunes (grados de la escala mayor)
+    const MODE_ORDER = ['ionian','dorian','phrygian','lydian','mixolydian','aeolian','locrian'];
     const COMMON_PROGRESSIONS = [
       [0,3,4,3], [0,5,1,4], [0,4,5,3], [0,5,4,3]
     ];
-    const MODE_ORDER = ['ionian','dorian','phrygian','lydian','mixolydian','aeolian','locrian'];
     const NOTE_NAMES = ['C','C♯/D♭','D','D♯/E♭','E','F','F♯/G♭','G','G♯/A♭','A','A♯/B♭','B'];
-    const CHORD_INTERVALS = {
-      ionian:[0,4,7,11], dorian:[0,3,7,10], phrygian:[0,3,7,10],
-      lydian:[0,4,7,11], mixolydian:[0,4,7,10], aeolian:[0,3,7,10],
-      locrian:[0,3,6,10]
-    };
 
-    // Estado MIDI
-    let midiAccess=null, chosenInput=null, chosenOutput=null,
-        isRemapOn=false, activeNotesMap=new Map();
+    let midiAccess, chosenInput, chosenOutput;
+    let isRemapOn = false, currentRoot = 0, currentType = 'ionian';
 
-    // Estado de la secuencia
-    let chordSeq=[], seqTimer=null, seqOffNotes=[];
-
-    // Elementos del DOM
     const rootButtons = document.querySelectorAll('#root-buttons button');
     const typeButtons = document.querySelectorAll('#type-buttons button');
-    const selInput    = document.getElementById('midi-in');
-    const selOutput   = document.getElementById('midi-out');
-    const btnEnable   = document.getElementById('enable-button');
-    const btnDisable  = document.getElementById('disable-button');
-    const statusEl    = document.getElementById('status');
-    const generateBtn = document.getElementById('generate-seq');
-    const chordSeqEl  = document.getElementById('chord-seq');
-    const durationSel = document.getElementById('chord-duration');
-    const startBtn    = document.getElementById('start-seq');
-    const stopBtn     = document.getElementById('stop-seq');
+    const selIn = document.getElementById('midi-in');
+    const selOut = document.getElementById('midi-out');
+    const btnEnable = document.getElementById('enable-button');
+    const btnDisable = document.getElementById('disable-button');
+    const statusEl = document.getElementById('status');
+
+    const genBtn = document.getElementById('generate-seq');
+    const seqList = document.getElementById('chord-seq');
+    const durSel = document.getElementById('chord-duration');
+    const startBtn = document.getElementById('start-seq');
+    const stopBtn = document.getElementById('stop-seq');
     const currentChordEl = document.getElementById('current-chord');
+    let chordSeq = [], seqTimer = null;
 
-    // Labels para mostrar tipo de acorde
-    const typeLabels = Array.from(typeButtons).reduce((o,b)=>{o[b.dataset.type]=b.innerText;return o;},{});
+    const typeLabels = Array.from(typeButtons).reduce((o, b) => {
+      o[b.dataset.type] = b.innerText; return o;
+    }, {});
 
-    // Seleccionar raíz y tipo (UI)
-    let currentRoot=0, currentType='ionian';
-    function selectRoot(v){
-      currentRoot=v;
-      rootButtons.forEach(b=>b.classList.toggle('selected',+b.dataset.root===v));
+    function selectRoot(r) {
+      currentRoot = r;
+      rootButtons.forEach(b => b.classList.toggle('selected', +b.dataset.root === r));
     }
-    function selectType(v){
-      currentType=v;
-      typeButtons.forEach(b=>b.classList.toggle('selected',b.dataset.type===v));
+    function selectType(t) {
+      currentType = t;
+      typeButtons.forEach(b => b.classList.toggle('selected', b.dataset.type === t));
     }
+    rootButtons.forEach(b => b.addEventListener('click', () => selectRoot(+b.dataset.root)));
+    typeButtons.forEach(b => b.addEventListener('click', () => selectType(b.dataset.type)));
     selectRoot(0); selectType('ionian');
-    rootButtons.forEach(b=>b.addEventListener('click',()=>selectRoot(+b.dataset.root)));
-    typeButtons.forEach(b=>b.addEventListener('click',()=>selectType(b.dataset.type)));
 
-    // Genera cuatro acordes lógicos
-    function generateChordSequence(){
+    function generateChordSequence() {
       const prog = COMMON_PROGRESSIONS[Math.floor(Math.random()*COMMON_PROGRESSIONS.length)];
-      return prog.map(deg=>({
+      return prog.map(deg => ({
         root: WHITE_SEMITONES[deg],
         type: MODE_ORDER[deg]
       }));
     }
-    function renderSequence(){
-      chordSeqEl.innerHTML='';
-      chordSeq.forEach(ch=>{
-        const li=document.createElement('li');
-        li.textContent=`${NOTE_NAMES[ch.root]} – ${typeLabels[ch.type]}`;
-        chordSeqEl.appendChild(li);
+    function renderSequence() {
+      seqList.innerHTML = '';
+      chordSeq.forEach(ch => {
+        const li = document.createElement('li');
+        li.textContent = `${NOTE_NAMES[ch.root]} – ${typeLabels[ch.type]}`;
+        seqList.appendChild(li);
       });
     }
 
-    // Envía OFF a notas previas
-    function stopPrevChord(){
-      seqOffNotes.forEach(n=>chosenOutput.send([0x80,n,0]));
-      seqOffNotes=[];
-    }
-    // Reproduce un acorde por MIDI
-    function playChord(ch){
-      const ints = CHORD_INTERVALS[ch.type]||[0,4,7];
-      // base en C4 = 60
-      const base=60, basePc=base%12;
-      const oct = (basePc<=ch.root? Math.floor(base/12):Math.floor(base/12)-1);
-      const rootMidi = ch.root + oct*12;
-      ints.forEach(i=>{
-        const note = rootMidi + i;
-        chosenOutput.send([0x90, note, 100]);
-        seqOffNotes.push(note);
-      });
+    function applyChord(ch) {
+      selectRoot(ch.root);
+      selectType(ch.type);
     }
 
-    // Ciclo de acordes en bucle
-    function startSequence(){
-      const dur = parseInt(durationSel.value,10)*1000;
-      let idx=0;
-      generateBtn.disabled=true;
-      startBtn.disabled=true;
-      stopBtn.disabled=false;
-      function next(){
-        stopPrevChord();
+    function startSequence() {
+      const dur = parseInt(durSel.value,10)*1000;
+      let idx = 0;
+      genBtn.disabled = true;
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      function next() {
         const ch = chordSeq[idx];
+        applyChord(ch);
         currentChordEl.textContent = `Acorde actual: ${NOTE_NAMES[ch.root]} – ${typeLabels[ch.type]}`;
-        if(chosenOutput) playChord(ch);
         idx = (idx+1) % chordSeq.length;
-        seqTimer = setTimeout(next,dur);
+        seqTimer = setTimeout(next, dur);
       }
       next();
     }
-    function stopSequence(){
+
+    function stopSequence() {
       clearTimeout(seqTimer);
-      stopPrevChord();
-      seqTimer=null;
-      currentChordEl.textContent='';
-      generateBtn.disabled=false;
-      startBtn.disabled=true;
-      stopBtn.disabled=true;
+      seqTimer = null;
+      currentChordEl.textContent = '';
+      genBtn.disabled = false;
+      startBtn.disabled = true;
+      stopBtn.disabled = true;
     }
 
-    generateBtn.addEventListener('click',()=>{
+    genBtn.addEventListener('click', () => {
       chordSeq = generateChordSequence();
       renderSequence();
-      startBtn.disabled=false;
-      stopBtn.disabled=true;
-      currentChordEl.textContent='';
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      currentChordEl.textContent = '';
     });
-    startBtn.addEventListener('click',startSequence);
-    stopBtn.addEventListener('click',stopSequence);
+    startBtn.addEventListener('click', startSequence);
+    stopBtn.addEventListener('click', stopSequence);
 
-    // --- Código Web MIDI original (remapeo de notas) ---
-    function onMIDISuccess(access){
-      midiAccess=access;
-      statusEl.textContent='Estado: Web MIDI inicializado.';
+    // ——— MIDI remapeo ———
+    function onMIDISuccess(access) {
+      midiAccess = access;
+      statusEl.textContent = 'Estado: Web MIDI inicializado.';
       updateDeviceLists();
-      midiAccess.onstatechange=updateDeviceLists;
+      midiAccess.onstatechange = updateDeviceLists;
     }
-    function onMIDIFailure(err){
-      statusEl.textContent='ERROR: No se pudo acceder a Web MIDI — '+err;
-      statusEl.style.color='red';
+    function onMIDIFailure(err) {
+      statusEl.textContent = 'ERROR: No se pudo acceder a Web MIDI — ' + err;
+      statusEl.style.color = 'red';
     }
-    function updateDeviceLists(){
-      selInput.innerHTML=''; selOutput.innerHTML='';
-      midiAccess.inputs.forEach(p=>{
-        const o=new Option(p.name+' ['+p.manufacturer+']',p.id);
-        selInput.append(o);
+    function updateDeviceLists() {
+      selIn.innerHTML = ''; selOut.innerHTML = '';
+      midiAccess.inputs.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.id; o.textContent = p.name + ' ['+p.manufacturer+']';
+        selIn.appendChild(o);
       });
-      midiAccess.outputs.forEach(p=>{
-        const o=new Option(p.name+' ['+p.manufacturer+']',p.id);
-        selOutput.append(o);
+      midiAccess.outputs.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.id; o.textContent = p.name + ' ['+p.manufacturer+']';
+        selOut.appendChild(o);
       });
-      if(!chosenInput&&midiAccess.inputs.size>0){
-        const id=midiAccess.inputs.keys().next().value;
-        selInput.value=id; chosenInput=midiAccess.inputs.get(id);
+      if (!chosenInput && midiAccess.inputs.size) {
+        const id = midiAccess.inputs.keys().next().value;
+        selIn.value = id; chosenInput = midiAccess.inputs.get(id);
       }
-      if(!chosenOutput&&midiAccess.outputs.size>0){
-        const id=midiAccess.outputs.keys().next().value;
-        selOutput.value=id; chosenOutput=midiAccess.outputs.get(id);
+      if (!chosenOutput && midiAccess.outputs.size) {
+        const id = midiAccess.outputs.keys().next().value;
+        selOut.value = id; chosenOutput = midiAccess.outputs.get(id);
       }
     }
-    selInput.addEventListener('change',()=>{
-      chosenInput=midiAccess.inputs.get(selInput.value);
-      if(isRemapOn) chosenInput.onmidimessage=handleMIDIMessage;
+    selIn.addEventListener('change', () => {
+      chosenInput = midiAccess.inputs.get(selIn.value);
+      if (isRemapOn) chosenInput.onmidimessage = handleMIDIMessage;
     });
-    selOutput.addEventListener('change',()=>{
-      chosenOutput=midiAccess.outputs.get(selOutput.value);
+    selOut.addEventListener('change', () => {
+      chosenOutput = midiAccess.outputs.get(selOut.value);
     });
-    btnEnable.addEventListener('click',()=>{
-      chosenInput=midiAccess.inputs.get(selInput.value);
-      chosenOutput=midiAccess.outputs.get(selOutput.value);
-      if(!chosenInput||!chosenOutput) return alert('Selecciona entrada y salida.');
+
+    btnEnable.addEventListener('click', () => {
+      chosenInput = midiAccess.inputs.get(selIn.value);
+      chosenOutput = midiAccess.outputs.get(selOut.value);
+      if (!chosenInput || !chosenOutput) return alert('Selecciona entrada y salida.');
       chosenOutput.send([0xB0,122,0]);
-      activeNotesMap.clear();
-      chosenInput.onmidimessage=handleMIDIMessage;
-      isRemapOn=true;
-      btnEnable.disabled=true;
-      btnDisable.disabled=false;
-      statusEl.textContent='Estado: Re-mapeo activo.';
+      activeNotes.clear();
+      chosenInput.onmidimessage = handleMIDIMessage;
+      isRemapOn = true;
+      btnEnable.disabled = true;
+      btnDisable.disabled = false;
+      statusEl.textContent = 'Estado: Re-mapeo activo.';
     });
-    btnDisable.addEventListener('click',()=>{
-      if(chosenInput) chosenInput.onmidimessage=null;
-      if(chosenOutput){
+    btnDisable.addEventListener('click', () => {
+      if (chosenInput) chosenInput.onmidimessage = null;
+      if (chosenOutput) {
         chosenOutput.send([0xB0,122,127]);
-        activeNotesMap.forEach(n=>chosenOutput.send([0x80,n,0]));
-        activeNotesMap.clear();
+        activeNotes.forEach(n => chosenOutput.send([0x80,n,0]));
+        activeNotes.clear();
       }
-      isRemapOn=false;
-      btnEnable.disabled=false;
-      btnDisable.disabled=true;
-      statusEl.textContent='Estado: re-mapeo desactivado.';
+      isRemapOn = false;
+      btnEnable.disabled = false;
+      btnDisable.disabled = true;
+      statusEl.textContent = 'Estado: re-mapeo desactivado.';
     });
 
-    function getScaleForChord(){
-      const ints=SCALE_INTERVALS[currentType]||[];
-      return ints.map(i=>(currentRoot+i)%12);
+    function getScaleForChord() {
+      return (SCALE_INTERVALS[currentType]||[]).map(i=>(currentRoot+i)%12);
     }
-    function mapToScale(orig){
-      const pc=orig%12, oct=Math.floor(orig/12);
-      const scale=getScaleForChord();
-      const wIdx=WHITE_SEMITONES.indexOf(pc);
-      if(wIdx!==-1){
-        const tPc=scale[wIdx%scale.length];
-        const cands=[tPc+(oct-1)*12,tPc+oct*12,tPc+(oct+1)*12]
-          .filter(n=>n>=0&&n<=127);
-        return cands.reduce((a,b)=>Math.abs(b-orig)<Math.abs(a-orig)?b:a);
+    function mapToScale(orig) {
+      const pc = orig%12, oct = Math.floor(orig/12);
+      const scale = getScaleForChord();
+      const wi = WHITE_SEMITONES.indexOf(pc);
+      if (wi!==-1) {
+        const tgt = scale[wi%scale.length];
+        return [tgt+(oct-1)*12, tgt+oct*12, tgt+(oct+1)*12]
+          .filter(n=>n>=0&&n<=127)
+          .reduce((a,b)=>Math.abs(b-orig)<Math.abs(a-orig)?b:a);
       }
-      const BLACK=[1,3,6,8,10];
-      if(BLACK.includes(pc)){
-        let best=null;
-        BLACK.forEach(bPc=>{
-          [oct-1,oct,oct+1].forEach(o=>{
-            const n=bPc+o*12;
-            if(n>=0&&n<=127&&(best===null||Math.abs(n-orig)<Math.abs(best-orig))){
-              best=n;
-            }
-          });
-        });
-        return best;
-      }
-      return null;
+      const BL=[1,3,6,8,10];
+      let best=null;
+      BL.forEach(bpc=>[oct-1,oct,oct+1].forEach(o=>{
+        const n=bpc+o*12;
+        if(n>=0&&n<=127&&(best===null||Math.abs(n-orig)<Math.abs(best-orig))) best=n;
+      }));
+      return best;
     }
-
-    function handleMIDIMessage(e){
+    const activeNotes = new Map();
+    function handleMIDIMessage(e) {
       const [st,n,v]=e.data, cmd=st&0xF0;
       if(cmd===0xB0){ chosenOutput.send(e.data); return; }
       if(cmd===0x90&&v>0){
-        const r=mapToScale(n);
-        if(r!==null){
-          activeNotesMap.set(n,r);
-          chosenOutput.send([0x90|(st&0x0F),r,v]);
-        }
+        const r = mapToScale(n);
+        if(r!=null){ activeNotes.set(n,r); chosenOutput.send([0x90|(st&0x0F),r,v]); }
       } else if(cmd===0x80||(cmd===0x90&&v===0)){
-        if(activeNotesMap.has(n)){
-          const r=activeNotesMap.get(n);
-          chosenOutput.send([0x80|(st&0x0F),r,0]);
-          activeNotesMap.delete(n);
+        if(activeNotes.has(n)){
+          chosenOutput.send([0x80|(st&0x0F),activeNotes.get(n),0]);
+          activeNotes.delete(n);
         }
       }
     }
