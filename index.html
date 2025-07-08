@@ -72,6 +72,22 @@
     #chord-seq li { text-align: left; margin: 2px 0; }
     #current-chord { font-size: 1.1em; color: #333; }
     hr { margin: 15px 0; border: none; border-top: 1px solid #ccc; }
+
+    /* Metronomo visual */
+    #metronome {
+      margin: 10px 0;
+    }
+    #metronome-dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background-color: #ccc;
+      border-radius: 50%;
+      transition: background-color 0.1s ease;
+    }
+    #metronome-dot.active {
+      background-color: #f00;
+    }
   </style>
 </head>
 <body>
@@ -120,6 +136,12 @@
     </select>
     <button id="start-seq" class="standard" disabled>Iniciar secuencia</button>
     <button id="stop-seq" class="standard" disabled>Detener secuencia</button>
+
+    <!-- Metronomo -->
+    <div id="metronome">
+      <span id="metronome-dot"></span>
+    </div>
+
     <div id="current-chord"></div>
     <hr>
 
@@ -171,6 +193,13 @@
     const currentChordEl = document.getElementById('current-chord');
     let chordSeq = [], seqTimer = null;
 
+    const metronomeDot = document.getElementById('metronome-dot');
+
+    // Alterna la marca visual cada segundo
+    setInterval(() => {
+      metronomeDot.classList.toggle('active');
+    }, 1000);
+
     const typeLabels = Array.from(typeButtons).reduce((o, b) => {
       o[b.dataset.type] = b.innerText; return o;
     }, {});
@@ -187,13 +216,16 @@
     typeButtons.forEach(b => b.addEventListener('click', () => selectType(b.dataset.type)));
     selectRoot(0); selectType('ionian');
 
+    // Genera progresión en una tonalidad aleatoria
     function generateChordSequence() {
+      const keyRoot = Math.floor(Math.random()*12);
       const prog = COMMON_PROGRESSIONS[Math.floor(Math.random()*COMMON_PROGRESSIONS.length)];
       return prog.map(deg => ({
-        root: WHITE_SEMITONES[deg],
+        root: (keyRoot + WHITE_SEMITONES[deg]) % 12,
         type: MODE_ORDER[deg]
       }));
     }
+
     function renderSequence() {
       seqList.innerHTML = '';
       chordSeq.forEach(ch => {
@@ -203,6 +235,7 @@
       });
     }
 
+    // Aplica raíz y tipo al UI para remapeo
     function applyChord(ch) {
       selectRoot(ch.root);
       selectType(ch.type);
